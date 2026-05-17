@@ -7,6 +7,7 @@ export class SignalReceiverComponent extends Component {
     this.receiverMode = receiverMode;
     this.requiredStrength = requiredStrength;
     this.currentSignalStrength = 0;
+    this.senderStates = new Map();
   }
 
   // Receiver mode constants
@@ -26,6 +27,23 @@ export class SignalReceiverComponent extends Component {
     const reqMetAfter = this.doesSignalMeetsReq(this.currentSignalStrength);
 
     // Call onReqMet() or onReqUnmet() if needed
+    if (reqMetBefore !== reqMetAfter) {
+      if (reqMetAfter) this.onReqsMet();
+      else this.onReqsUnmet();
+    }
+  }
+
+  onSignalStateChanged(sender, stateValue) {
+    this.senderStates.set(sender, stateValue);
+
+    // Calculate total absolute strength from all connected senders
+    let totalStrength = 0;
+    this.senderStates.forEach(val => totalStrength += val);
+
+    const reqMetBefore = this.doesSignalMeetsReq(this.currentSignalStrength);
+    this.currentSignalStrength = totalStrength;
+    const reqMetAfter = this.doesSignalMeetsReq(this.currentSignalStrength);
+
     if (reqMetBefore !== reqMetAfter) {
       if (reqMetAfter) this.onReqsMet();
       else this.onReqsUnmet();

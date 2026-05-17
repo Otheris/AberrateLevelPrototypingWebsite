@@ -17,26 +17,21 @@ export class Stairs extends Entity {
     constructor(options = {}) {
         super(options);
         this.inverted = options.inverted || false;
-        this.requiredStrength = options.requiredStrength !== undefined ? options.requiredStrength : 1;
         this.isPowered = false;
         this.addComponent(new BoxColliderComponent({ width: 120, height: 80 }));
-        this.addComponent(new SpriteRendererComponent({ 
+        this.addComponent(new SpriteRendererComponent({
             colorTint: '#55ccff',
             src: { x: 0, y: 0, w: 40, h: 40 },
             dest: { x: 0, y: 0, w: 120, h: 80 }
         }));
-        this.addComponent(new SignalReceiverComponent({
-            receiverMode: SignalReceiverComponent.MODE_GREATER_OR_EQUAL,
-            requiredStrength: this.requiredStrength
-        }));
+        this.addComponent(new SignalReceiverComponent());
 
         setTimeout(() => this.updateVisuals(), 0);
     }
 
     getEditableProperties() {
         return [
-            { property: 'inverted', type: 'checkbox', label: 'Inverted' },
-            { property: 'requiredStrength', type: 'number', label: 'Required Buttons' }
+            { property: 'inverted', type: 'checkbox', label: 'Inverted' }
         ];
     }
 
@@ -44,25 +39,13 @@ export class Stairs extends Entity {
         super.setEditableProperty(key, value);
         if (key === 'inverted') {
             this.updateVisuals();
-        } else if (key === 'requiredStrength') {
-            const receiver = this.getComponent(SignalReceiverComponent);
-            if (receiver) {
-                receiver.requiredStrength = this.requiredStrength;
-                // Re-evaluate signal requirements
-                const reqMetAfter = receiver.doesSignalMeetsReq(receiver.currentSignalStrength);
-                if (reqMetAfter && !this.isPowered) {
-                    this.onReceiverReqsMet();
-                } else if (!reqMetAfter && this.isPowered) {
-                    this.onReceiverReqsUnmet();
-                }
-            }
         }
     }
 
     updateVisuals() {
         const renderer = this.getComponent(SpriteRendererComponent);
         if (renderer) {
-            const isUp = this.inverted ? !this.isPowered : this.isPowered;
+            const isUp = this.inverted ? this.isPowered : !this.isPowered;
             if (isUp) {
                 renderer.colorTint = '#55ccff';
             } else {

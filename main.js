@@ -1,6 +1,7 @@
 import { state, onPlayModeUpdate } from './editor.js';
 import { draw } from './renderer.js';
 import { setupInputHandlers } from './input.js';
+import { history } from './history.js';
 
 let canvas = document.getElementById('editor');
 let ctx = canvas.getContext('2d');
@@ -41,6 +42,7 @@ setupInputHandlers(canvas, state);
 // on content loaded
 document.addEventListener('DOMContentLoaded', () => {
     resizeCanvas();
+    history.init(state);
     // Initial render
     draw(ctx, state);   
     canvas.oncontextmenu = function (e) { 

@@ -36,10 +36,4 @@ export class SignalSenderComponent extends Component {
   removeAllReceivers() {
     this.receiverComponents = [];
   }
-
-  clone() {
-    const copy = super.clone();
-    copy.receiverComponents = [...this.receiverComponents];
-    return copy;
-  }
 }

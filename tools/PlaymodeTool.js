@@ -73,6 +73,13 @@ export class PlaymodeTool extends Tool {
       console.log('Stopped dragging entity in playmode:', state.playmodeDraggingEntity.getName());
       state.playmodeDraggingEntity = null;
       state.highlightedEntities = [];
+
+      // Update buttons state
+      state.playmodeEntities.forEach(entity => {
+          if (entity.getName() === 'button' && typeof entity.checkPowered === 'function') {
+              entity.checkPowered(0);
+          }
+      });
     }
   }
 

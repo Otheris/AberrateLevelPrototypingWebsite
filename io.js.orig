@@ -49,8 +49,6 @@ export function serializeLevel(state) {
 
 export async function exportLevel(state) {
     const jsonString = serializeLevel(state);
-    const levelNameInput = document.getElementById('levelName');
-    const levelName = levelNameInput ? levelNameInput.value : 'Untitled';
     console.log("=== EXPORTED LEVEL JSON ===");
     console.log(jsonString);
     console.log("===========================");
@@ -102,12 +100,6 @@ export function importLevel(state, jsonString) {
         if (data.camera) state.camera = { ...data.camera };
         if (data.tiles) state.tiles = cloneValue(data.tiles);
         if (data.rooms) state.rooms = cloneValue(data.rooms);
-
-        // Clear ephemeral UI selection state to avoid stale references
-        state.selectedEntites = [];
-        state.highlightedEntities = [];
-        state.dragMoving = false;
-        state.dragSelecting = false;
 
         state.entities = [];
         let maxId = -1;

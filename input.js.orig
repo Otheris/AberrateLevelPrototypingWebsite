@@ -6,7 +6,6 @@
 import { config, mouseDown, mouseUp, keyDown, keyUp, mouseMove, zoom, setTool, activateAltOverride, deactivateAltOverride, getCurrentTool, getPreviousTool, isAltOverrideActive, screenToWorld, onEntityHotkeyPressed, entityTypes, onEnterPlayMode, onExitPlayMode, state } from './editor.js';
 import { exportLevel, importLevel } from './io.js';
 import { history } from './history.js';
-import { updateSettingsPanel } from './updateSettingsPanel.js';
 
 /**
  * Generate entity buttons dynamically from entityTypes
@@ -83,11 +82,6 @@ function updateToolButtonsUI() {
       }
     }
   });
-
-  // Setup entity settings update listener
-  window.addEventListener('entityPropertyChanged', (e) => {
-    history.saveSnapshot(state);
-  });
 }
 
 export function setupInputHandlers(canvas, state) {
@@ -142,7 +136,7 @@ export function setupInputHandlers(canvas, state) {
     console.log('Mouse down at', state.mouse.mouseDownX, state.mouse.mouseDownY, 'grid', state.mouse.gridX, state.mouse.gridY);
     state.mouse.mouseDownGridX = state.mouse.gridX;
     state.mouse.mouseDownGridY = state.mouse.gridY;
-    console.log('grid positions:', state.mouse.mouseDownGridX, state.mouse.mouseDownGridY);  
+    console.log('grid positions:', state.mouse.mouseDownGridX, state.mouse.mouseDownGridY);
     state.mouse.mouseDownWorldX = state.mouse.worldX;
     state.mouse.mouseDownWorldY = state.mouse.worldY;
     mouseDown(event.button);
@@ -361,10 +355,5 @@ export function setupInputHandlers(canvas, state) {
         }
       }
     }
-  });
-
-  // Setup entity settings update listener
-  window.addEventListener('entityPropertyChanged', (e) => {
-    history.saveSnapshot(state);
   });
 }

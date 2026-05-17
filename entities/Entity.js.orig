@@ -96,14 +96,4 @@ export class Entity {
   hasComponent(ComponentClass) {
     return this.getComponent(ComponentClass) !== null;
   }
-
-  getEditableProperties() {
-    return [];
-  }
-
-  setEditableProperty(key, value) {
-    this[key] = value;
-  }
 }
-
-

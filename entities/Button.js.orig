@@ -27,13 +27,16 @@ export class Button extends Entity {
         }));
         this.addComponent(new SignalSenderComponent());
 
+        this.addComponent({
+            entity: null,
+            clone: function() {
+                return { entity: null, onPlayModeUpdate: this.onPlayModeUpdate };
+            },
+            onPlayModeUpdate: function(dt) { this.entity.checkPowered(dt); }
+        });
+
         // Timeout to wait for Transform to be added by super class if not yet
         setTimeout(() => this.updateVisuals(), 0);
-    }
-
-    onPlayModeUpdate(dt) {
-        // Do not check powered state every frame, wait for drops
-        // The checkPowered is called by PlaymodeTool on drop
     }
 
     getEditableProperties() {
@@ -90,6 +93,9 @@ export class Button extends Entity {
             }
         });
 
-        sender.setSignalState(isPowered ? 1 : 0);
+        const sender = this.getComponent(SignalSenderComponent);
+        if (sender) {
+            sender.setSignalState(isPowered ? 1 : 0);
+        }
     }
 }

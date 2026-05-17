@@ -18,27 +18,19 @@
         <button id="hitboxBtn" data-inactiveText="Show Hitboxes" data-activeText="Hide Hitboxes"></button>
         <button id="hotkeyBtn" data-inactiveText="Show Hotkeys" data-activeText="Hide Hotkeys"></button>
         <button id="importBtn">Import</button>
-        <button id="undoBtn">Undo</button>
-        <button id="redoBtn">Redo</button>
         <button id="exportBtn">Export</button>
       </div>
     </div>
   </div>
 
   <!-- Canvas Area -->
-  <div id="editor-layout" style="display: flex; height: calc(100vh - 120px);">
-    <div id="canvasContainer" style="flex: 1; position: relative;">
-      <canvas id="editor" class="js-noMenu"></canvas>
-      <button id="playModeBtn" class="play-mode-btn" type="button" aria-label="Enter play mode">
-        <span class="play-icon">▶</span>
-        <span class="play-text">Play</span>
-      </button>
-      <div id="entityPalette" class="entity-palette hidden">
-      </div>
-    </div>
-    <div id="entitySettingsPanel" style="width: 250px; background: #262626; color: #e0e0e0; border-left: 1px solid #555; padding: 10px; display: none; flex-direction: column;">
-      <h3>Entity Settings</h3>
-      <div id="entitySettingsContent"></div>
+  <div id="canvasContainer">
+    <canvas id="editor" class="js-noMenu"></canvas>
+    <button id="playModeBtn" class="play-mode-btn" type="button" aria-label="Enter play mode">
+      <span class="play-icon">▶</span>
+      <span class="play-text">Play</span>
+    </button>
+    <div id="entityPalette" class="entity-palette hidden">
     </div>
   </div>
 

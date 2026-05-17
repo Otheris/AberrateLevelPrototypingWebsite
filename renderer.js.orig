@@ -179,6 +179,11 @@ function drawRooms(ctx, state) {
     ctx.fillStyle = style.fill;
     ctx.fillRect(room.x, room.y, room.w, room.h);
 
+    // Outline
+    ctx.strokeStyle = style.stroke;
+    ctx.lineWidth = 2 / state.camera.zoom;
+    ctx.strokeRect(room.x, room.y, room.w, room.h);
+
     // Draw Z height text only when holding shift in room mode
     if (state.selectedToolName === 'room' && state.input.isShiftDown) {
       ctx.fillStyle = style.stroke;
@@ -186,69 +191,6 @@ function drawRooms(ctx, state) {
       ctx.fillText(`z:${z}`, room.x + 5 / state.camera.zoom, room.y + 20 / state.camera.zoom);
     }
   });
-
-  // Group rooms by Z-level to draw merged outlines
-  const roomsByZ = {};
-  state.rooms.forEach(room => {
-      const z = Math.max(0, room.z || 0);
-      if (!roomsByZ[z]) roomsByZ[z] = [];
-      roomsByZ[z].push(room);
-  });
-
-  ctx.lineWidth = 2 / state.camera.zoom;
-  for (const zStr in roomsByZ) {
-      const z = parseInt(zStr);
-      const style = zColors[Math.min(z, zColors.length - 1)];
-      ctx.strokeStyle = style.stroke;
-      const rooms = roomsByZ[z];
-
-      ctx.beginPath();
-      rooms.forEach(room => {
-          drawLineSegments(ctx, room.x, room.y, room.x + room.w, room.y, rooms, room, true);
-          drawLineSegments(ctx, room.x, room.y + room.h, room.x + room.w, room.y + room.h, rooms, room, true);
-          drawLineSegments(ctx, room.x, room.y, room.x, room.y + room.h, rooms, room, false);
-          drawLineSegments(ctx, room.x + room.w, room.y, room.x + room.w, room.y + room.h, rooms, room, false);
-      });
-      ctx.stroke();
-  }
-}
-
-function drawLineSegments(ctx, x1, y1, x2, y2, rooms, currentRoom, isHorizontal) {
-    let segments = [{ start: isHorizontal ? x1 : y1, end: isHorizontal ? x2 : y2 }];
-
-    rooms.forEach(r => {
-        if (r === currentRoom) return; // don't subtract from itself
-        let newSegments = [];
-        segments.forEach(seg => {
-            if (isHorizontal) {
-                if ((y1 === r.y || y1 === r.y + r.h) && r.x < seg.end && r.x + r.w > seg.start) {
-                    // Line is on the edge of room r. Don't draw the shared part.
-                    if (seg.start < r.x) newSegments.push({ start: seg.start, end: Math.min(seg.end, r.x) });
-                    if (seg.end > r.x + r.w) newSegments.push({ start: Math.max(seg.start, r.x + r.w), end: seg.end });
-                } else {
-                    newSegments.push(seg);
-                }
-            } else {
-                if ((x1 === r.x || x1 === r.x + r.w) && r.y < seg.end && r.y + r.h > seg.start) {
-                    if (seg.start < r.y) newSegments.push({ start: seg.start, end: Math.min(seg.end, r.y) });
-                    if (seg.end > r.y + r.h) newSegments.push({ start: Math.max(seg.start, r.y + r.h), end: seg.end });
-                } else {
-                    newSegments.push(seg);
-                }
-            }
-        });
-        segments = newSegments;
-    });
-
-    segments.forEach(seg => {
-        if (isHorizontal) {
-            ctx.moveTo(seg.start, y1);
-            ctx.lineTo(seg.end, y1);
-        } else {
-            ctx.moveTo(x1, seg.start);
-            ctx.lineTo(x1, seg.end);
-        }
-    });
 }
 
 function drawRoomTool(ctx, state) {
@@ -284,7 +226,7 @@ function drawSelectTool(ctx, state) {
     const ay = mouse.mouseDownWorldY;
     const bx = mouse.worldX;
     const by = mouse.worldY;
-    
+
     const x = Math.min(ax, bx);
     const y = Math.min(ay, by);
     const w = Math.abs(bx - ax);
@@ -320,12 +262,7 @@ function drawSignalConnections(ctx, state) {
       signalSender.receiverComponents.forEach(receiver => {
         const receiverTransform = receiver.entity.getComponent(TransformComponent);
         if (receiverTransform) {
-          const isSelected = state.selectedConnections && state.selectedConnections.some(conn => conn.sender === signalSender && conn.receiver === receiver);
-          if (isSelected) {
-            drawLine(ctx, transform.x, transform.y, receiverTransform.x, receiverTransform.y, 'rgba(255, 100, 0, 1)', 4 / state.camera.zoom);
-          } else {
-            drawLine(ctx, transform.x, transform.y, receiverTransform.x, receiverTransform.y, 'rgb(255, 196, 0)', 2 / state.camera.zoom);
-          }
+          drawLine(ctx, transform.x, transform.y, receiverTransform.x, receiverTransform.y, 'rgb(255, 196, 0)', 2);
         }
       });
     }
@@ -374,7 +311,7 @@ function drawDebugCubeConnections(ctx, state) {
   });
 }
 
-function drawDebugCubeParentConnections(ctx, state) {  
+function drawDebugCubeParentConnections(ctx, state) {
   const entities = getActiveEntities();
   entities.forEach(entity => {
     const aberrateComponent = entity.getComponent(AberrateCubeComponent);

@@ -126,14 +126,13 @@ export const state = {
   dragSelecting: false,
   selectedEntites: [],
   highlightedEntities: [],
-  selectedConnections: [],
   dragMoving: false,
   drawingConnection: false,
   drawingConnectionFromComponents: [],
 
   // Room Tool
   creatingRoom: false,
-  
+
   // Entity Tool
   selectedEntityType: 'box', // Default
   placingEntity: false, // Whether we're currently placing an entity (for click-and-drag)
@@ -205,33 +204,6 @@ export function onEnterPlayMode() {
   console.log('Entered play mode');
   state.playmodePreviousToolName = state.selectedToolName;
   state.playmodeEntities = state.entities.map((entity) => entity.clone());
-
-  // Remap signal connections for playmode
-  state.playmodeEntities.forEach((playEntity, index) => {
-      const editEntity = state.entities[index];
-      const sender = playEntity.getComponent('SignalSenderComponent');
-      if (sender) {
-          const editSender = editEntity.getComponent('SignalSenderComponent');
-          sender.receiverComponents = [];
-          if (editSender && editSender.receiverComponents) {
-              editSender.receiverComponents.forEach(editReceiver => {
-                  const receiverIndex = state.entities.findIndex(e => e === editReceiver.entity);
-                  if (receiverIndex !== -1) {
-                      const playReceiver = state.playmodeEntities[receiverIndex].getComponent('SignalReceiverComponent');
-                      if (playReceiver) sender.receiverComponents.push(playReceiver);
-                  }
-              });
-          }
-      }
-  });
-
-  // Force button evaluation before the first frame so it sends the initial signal correctly
-  state.playmodeEntities.forEach(entity => {
-      if (entity.getName() === 'button' && typeof entity.checkPowered === 'function') {
-          entity.checkPowered(0);
-      }
-  });
-
   state.editorMode = 'play';
   setTool('playmode');
   hidePlayModeUI();
@@ -437,7 +409,7 @@ export function setTile(gridX, gridY, tileType) {
 
   let foundIndex = state.tiles.findIndex(t => t.x === gridX && t.y === gridY);
   if (foundIndex !== -1) {
-    state.tiles[foundIndex].type = tileType; // Update existing tile  
+    state.tiles[foundIndex].type = tileType; // Update existing tile
   } else {
     state.tiles.push({ x: gridX, y: gridY, type: tileType }); // Add new tile
   }

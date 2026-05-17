@@ -49,7 +49,6 @@ export class EntityTool extends Tool {
       }
       state.entities.push(entity);
       console.log('Placing entity:', entity.getName(), 'at', transform?.x, transform?.y);
-      history.saveSnapshot(state);
     }
     console.log(state.entities);
   }
