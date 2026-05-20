@@ -79,6 +79,13 @@ export const state = {
   rooms: [],
   nodeData: [], // Stores user-defined properties for nodes { x, y, name }
 
+  // Custom cube types for the level
+  cubeTypes: [
+    { name: 'White', weight: 2, color: '#ffffff' },
+    { name: 'Red', weight: 1, color: '#ff0000' },
+    { name: 'Blue', weight: 1, color: '#0000ff' }
+  ],
+
   // UI state
   selectedToolName: 'camera',
   previousToolName: 'camera',

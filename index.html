@@ -17,11 +17,25 @@
       <div class="level-actions">
         <button id="hitboxBtn" data-inactiveText="Show Hitboxes" data-activeText="Hide Hitboxes"></button>
         <button id="hotkeyBtn" data-inactiveText="Show Hotkeys" data-activeText="Hide Hotkeys"></button>
+        <button id="cubeTypesBtn">Cube Types</button>
         <button id="importBtn">Import</button>
         <button id="undoBtn">Undo</button>
         <button id="redoBtn">Redo</button>
         <button id="exportBtn">Export</button>
         <button id="solverExportBtn" style="background-color:#4CAF50; color:white;">Solver Export</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Cube Types Modal -->
+  <div id="cubeTypesModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Manage Cube Types</h2>
+      <div id="cubeTypesList"></div>
+      <button id="addCubeTypeBtn">+ Add Type</button>
+      <div class="modal-actions">
+        <button id="closeCubeTypesBtn">Close</button>
       </div>
     </div>
   </div>

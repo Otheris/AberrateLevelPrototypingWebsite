@@ -7,6 +7,7 @@ import { config, mouseDown, mouseUp, keyDown, keyUp, mouseMove, zoom, setTool, a
 import { exportLevel, importLevel } from './io.js';
 import { history } from './history.js';
 import { updateSettingsPanel } from './updateSettingsPanel.js';
+import { setupCubeTypesModal } from './cubeTypesModal.js';
 
 /**
  * Generate entity buttons dynamically from entityTypes
@@ -341,6 +342,8 @@ export function setupInputHandlers(canvas, state) {
           });
       });
   }
+
+  setupCubeTypesModal();
 
   const importBtn = document.getElementById('importBtn');
   if (importBtn) {
