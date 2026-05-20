@@ -22,8 +22,14 @@ export function serializeLevel(state) {
             id: entity.id,
             type: typeKey,
             color: entity.color,
-            components: {}
+            components: {},
+            options: {}
         };
+
+        const editableProps = entity.getEditableProperties();
+        editableProps.forEach(prop => {
+            entityData.options[prop.property] = cloneValue(entity[prop.property]);
+        });
 
         entity.components.forEach(component => {
             const componentName = component.constructor.name;
@@ -142,6 +148,13 @@ export function importLevel(state, jsonString) {
                     if (componentName === 'SpriteRendererComponent') {
                         component.image = null; // force reload image
                     }
+                }
+            }
+
+            // Apply entity options
+            if (entityData.options) {
+                for (const [key, value] of Object.entries(entityData.options)) {
+                    entity.setEditableProperty(key, value);
                 }
             }
 
