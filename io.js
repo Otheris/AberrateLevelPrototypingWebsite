@@ -94,6 +94,20 @@ export async function exportLevel(state) {
                 const blob = new Blob([jsonString], { type: 'application/json' });
                 const formData = new FormData();
                 formData.append('file', blob, `${levelName.replace(/[^a-zA-Z0-9]/g, '_') || 'level'}.json`);
+
+                // Also get an image from the canvas
+                const canvas = document.getElementById('editor');
+                if (canvas) {
+                    try {
+                        const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                        if (imageBlob) {
+                            formData.append('file1', imageBlob, `${levelName.replace(/[^a-zA-Z0-9]/g, '_') || 'level'}.png`);
+                        }
+                    } catch (err) {
+                        console.error('Failed to capture canvas screenshot:', err);
+                    }
+                }
+
                 if (contentMessage) {
                     formData.append('payload_json', JSON.stringify({
                         content: contentMessage,
