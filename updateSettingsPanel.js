@@ -1,9 +1,71 @@
+import { computeNodes } from './utils/nodeUtils.js';
+
 export function updateSettingsPanel(state) {
   const panel = document.getElementById('entitySettingsPanel');
   const content = document.getElementById('entitySettingsContent');
   if (!panel || !content) return;
 
-  if (state.selectedEntites.length === 1 && state.selectedConnections && state.selectedConnections.length === 0) {
+  // Clear panel first
+  panel.style.display = 'none';
+  content.innerHTML = '';
+
+  if (state.selectedNode && state.selectedEntites.length === 0 && (!state.selectedConnections || state.selectedConnections.length === 0)) {
+    // Show Node settings
+    panel.style.display = 'flex';
+
+    const label = document.createElement('label');
+    label.style.display = 'block';
+    label.style.marginBottom = '5px';
+    label.innerText = 'Node Name: ';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = state.selectedNode.id; // Either user defined or default
+
+    input.addEventListener('change', (e) => {
+      const newName = e.target.value.trim();
+      if (!newName) return;
+
+      if (!state.nodeData) state.nodeData = [];
+
+      // Since rooms could be reconstructed, we store nodeData relative to the center of the first rect
+      const firstRect = state.selectedNode.rects[0];
+      const centerX = firstRect.x + firstRect.w / 2;
+      const centerY = firstRect.y + firstRect.h / 2;
+
+      // Find if we already have data for this node
+      let found = false;
+      for (let i = 0; i < state.nodeData.length; i++) {
+          const data = state.nodeData[i];
+          let inside = false;
+          for (const rect of state.selectedNode.rects) {
+              if (data.x >= rect.x && data.x <= rect.x + rect.w && data.y >= rect.y && data.y <= rect.y + rect.h) {
+                  inside = true;
+                  break;
+              }
+          }
+          if (inside) {
+              state.nodeData[i].name = newName;
+              found = true;
+              break;
+          }
+      }
+
+      if (!found) {
+          state.nodeData.push({ x: centerX, y: centerY, name: newName });
+      }
+
+      // Re-compute nodes to apply changes to state.selectedNode
+      const updatedNodes = computeNodes(state);
+      state.selectedNode = updatedNodes.find(n => n.id === newName) || updatedNodes.find(n => n.defaultId === state.selectedNode.defaultId);
+    });
+
+    label.appendChild(input);
+    content.appendChild(label);
+    return;
+  }
+
+  if (state.selectedEntites.length === 1 && (!state.selectedConnections || state.selectedConnections.length === 0)) {
     const entity = state.selectedEntites[0];
     const props = entity.getEditableProperties();
     if (props && props.length > 0) {
@@ -34,6 +96,14 @@ export function updateSettingsPanel(state) {
             window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
           });
           label.appendChild(input);
+        } else if (prop.type === 'logic') {
+          import('./uiLogicBuilder.js').then(({ renderLogicBuilder }) => {
+              const logicContainer = document.createElement('div');
+              logicContainer.style.marginTop = '10px';
+              renderLogicBuilder(logicContainer, entity, state);
+              content.appendChild(logicContainer);
+          });
+          return; // uiLogicBuilder handles its own appending
         }
         content.appendChild(label);
       });

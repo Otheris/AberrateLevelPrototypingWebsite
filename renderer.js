@@ -4,6 +4,8 @@ import { TransformComponent } from "./components/TransformComponent.js";
 import { BoxColliderComponent } from './components/BoxColliderComponent.js';
 import { AberrateCubeComponent } from './components/AberrateCubeComponent.js';
 import { SignalSenderComponent } from './components/SignalSenderComponent.js';
+import { TextRendererComponent } from './components/TextRendererComponent.js';
+import { ArrowRendererComponent } from './components/ArrowRendererComponent.js';
 import { SignalReceiverComponent } from './components/SignalReceiverComponent.js';
 
 export function draw(ctx, state) {
@@ -211,6 +213,21 @@ function drawRooms(ctx, state) {
       });
       ctx.stroke();
   }
+
+  // Highlight selected node
+  if (state.selectedNode) {
+      ctx.lineWidth = 4 / state.camera.zoom;
+      ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
+      ctx.beginPath();
+      const rooms = state.selectedNode.rects;
+      rooms.forEach(room => {
+          drawLineSegments(ctx, room.x, room.y, room.x + room.w, room.y, rooms, room, true);
+          drawLineSegments(ctx, room.x, room.y + room.h, room.x + room.w, room.y + room.h, rooms, room, true);
+          drawLineSegments(ctx, room.x, room.y, room.x, room.y + room.h, rooms, room, false);
+          drawLineSegments(ctx, room.x + room.w, room.y, room.x + room.w, room.y + room.h, rooms, room, false);
+      });
+      ctx.stroke();
+  }
 }
 
 function drawLineSegments(ctx, x1, y1, x2, y2, rooms, currentRoom, isHorizontal) {
@@ -339,13 +356,22 @@ function drawEntites(ctx, state) {
     const sprite = entity.getComponent(SpriteRendererComponent);
     if (sprite && transform) {
       sprite.draw(ctx, transform);
-      return; // Skip fallback drawing if sprite is present
-    }
-
-    // fallback to draw when theres no spritecomponent
-    if (transform) {
+    } else if (transform) {
+      // fallback to draw when theres no spritecomponent
       ctx.fillStyle = 'rgb(255, 0, 255)';
       ctx.fillRect(transform.x - 20, transform.y - 20, 40, 40);
+    }
+
+    // Draw text component if it exists
+    const textRenderer = entity.getComponent(TextRendererComponent);
+    if (textRenderer && transform) {
+      textRenderer.draw(ctx, transform);
+    }
+
+    // Draw arrow component if it exists
+    const arrowRenderer = entity.getComponent(ArrowRendererComponent);
+    if (arrowRenderer && transform) {
+      arrowRenderer.draw(ctx, transform, entity.direction || 0);
     }
   });
 }

@@ -212,6 +212,10 @@ body {
   pointer-events: none;
 }
 
+#notification.hidden {
+  display: none;
+}
+
 #bottomBar.hidden {
   display: none;
 }

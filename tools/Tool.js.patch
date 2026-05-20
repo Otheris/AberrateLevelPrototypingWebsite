@@ -1,0 +1,29 @@
+<<<<<<< SEARCH
+  findEntityAtMouse(state, list = state.entities) {
+    for (const entity of list) {
+      const transform = entity.getComponent(TransformComponent);
+      const collider = entity.getComponent(BoxColliderComponent);
+      if (transform && collider && collider.pointIntersect(state.mouse.worldX, state.mouse.worldY)) {
+        return entity;
+      }
+    }
+    return null;
+  }
+=======
+  findEntityAtMouse(state, list = state.entities) {
+    for (const entity of list) {
+      const transform = entity.getComponent(TransformComponent);
+      const collider = entity.getComponent(BoxColliderComponent);
+      if (transform && collider && collider.pointIntersect(state.mouse.worldX, state.mouse.worldY)) {
+        return entity;
+      }
+    }
+    return null;
+  }
+
+  findRoomNodeAtMouse(state) {
+    import { computeNodes, getPointNode } from '../utils/nodeUtils.js';
+    const nodes = computeNodes(state);
+    return getPointNode(nodes, state.mouse.worldX, state.mouse.worldY);
+  }
+>>>>>>> REPLACE

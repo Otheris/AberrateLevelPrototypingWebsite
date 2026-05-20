@@ -11,6 +11,7 @@ export function serializeLevel(state) {
         camera: state.camera,
         tiles: state.tiles,
         rooms: state.rooms,
+        nodeData: state.nodeData || [],
         entities: []
     };
 
@@ -102,6 +103,7 @@ export function importLevel(state, jsonString) {
         if (data.camera) state.camera = { ...data.camera };
         if (data.tiles) state.tiles = cloneValue(data.tiles);
         if (data.rooms) state.rooms = cloneValue(data.rooms);
+        if (data.nodeData) state.nodeData = cloneValue(data.nodeData);
 
         // Clear ephemeral UI selection state to avoid stale references
         state.selectedEntites = [];

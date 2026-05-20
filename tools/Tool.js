@@ -1,5 +1,6 @@
 import { TransformComponent } from '../components/TransformComponent.js';
 import { BoxColliderComponent } from '../components/BoxColliderComponent.js';
+import { computeNodes, getPointNode } from '../utils/nodeUtils.js';
 
 /**
  * Base Tool class for the strategy pattern
@@ -54,6 +55,11 @@ export class Tool {
       }
     }
     return null;
+  }
+
+  findRoomNodeAtMouse(state) {
+    const nodes = computeNodes(state);
+    return getPointNode(nodes, state.mouse.worldX, state.mouse.worldY);
   }
 
   /**
