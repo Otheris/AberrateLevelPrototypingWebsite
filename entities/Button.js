@@ -3,6 +3,7 @@ import { Entity } from "./Entity.js";
 import { SpriteRendererComponent } from "../components/SpriteRendererComponent.js";
 import { TransformComponent } from "../components/TransformComponent.js";
 import { SignalSenderComponent } from "../components/SignalSenderComponent.js";
+import { TextRendererComponent } from "../components/TextRendererComponent.js";
 import { Box } from "./Box.js";
 import { state } from "../editor.js";
 
@@ -18,6 +19,7 @@ export class Button extends Entity {
     constructor(options = {}) {
         super(options);
         this.whiteOnly = options.whiteOnly || false;
+        this.name = options.name || "b" + this.id;
         this.addComponent(new BoxColliderComponent({ width: 60, height: 60 }));
         this.addComponent(new SpriteRendererComponent({
             sprite: 'sprites/cubebutton.png',
@@ -26,6 +28,9 @@ export class Button extends Entity {
             dest: { x: 0, y: 0, w: 60, h: 60 }
         }));
         this.addComponent(new SignalSenderComponent());
+
+        const textComp = new TextRendererComponent({ text: this.name, offsetY: -40 });
+        this.addComponent(textComp);
 
         this.addComponent({
             entity: null,
@@ -41,7 +46,8 @@ export class Button extends Entity {
 
     getEditableProperties() {
         return [
-            { property: 'whiteOnly', type: 'checkbox', label: 'White Only' }
+            { property: 'whiteOnly', type: 'checkbox', label: 'White Only' },
+            { property: 'name', type: 'text', label: 'Name (ID)' }
         ];
     }
 
@@ -49,6 +55,11 @@ export class Button extends Entity {
         super.setEditableProperty(key, value);
         if (key === 'whiteOnly') {
             this.updateVisuals();
+        } else if (key === 'name') {
+            const textComp = this.getComponent(TextRendererComponent);
+            if (textComp) {
+                textComp.text = value;
+            }
         }
     }
 
@@ -67,7 +78,8 @@ export class Button extends Entity {
 
         let isPowered = false;
 
-        const playmodeEntities = state.playmodeEntities || [];
+        const editorState = state || { playmodeEntities: [] };
+        const playmodeEntities = editorState.playmodeEntities || editorState.entities || [];
         playmodeEntities.forEach(entity => {
             if (entity instanceof Box) {
                 const boxCollider = entity.getComponent(BoxColliderComponent);

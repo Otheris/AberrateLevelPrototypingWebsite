@@ -28,6 +28,8 @@ export class SelectTool extends Tool {
 
   onMouseDown(state, button) {
     let entityAtMouse = this.findEntityAtMouse(state);
+    let nodeAtMouse = null;
+
     if (entityAtMouse) {
 
       if (state.drawingConnection) {
@@ -40,10 +42,12 @@ export class SelectTool extends Tool {
         // if entity was already selected, start drag move
         state.dragMoving = true;
       }
+    } else {
+      nodeAtMouse = this.findRoomNodeAtMouse(state);
     }
     if (!state.dragMoving) {
       // Check for connection line selection if no entity is under mouse
-      if (!entityAtMouse && !state.input.isShiftDown) {
+      if (!entityAtMouse && !nodeAtMouse && !state.input.isShiftDown) {
         let closestConn = null;
         let closestDist = Infinity;
 
@@ -67,6 +71,7 @@ export class SelectTool extends Tool {
         if (closestConn) {
             state.selectedConnections = [closestConn];
             this.clearSelection(state);
+            state.selectedNode = null;
             updateSettingsPanel(state);
             return;
         } else {
@@ -75,8 +80,16 @@ export class SelectTool extends Tool {
                 updateSettingsPanel(state);
             }
         }
+      } else if (nodeAtMouse) {
+          state.selectedConnections = [];
+          state.selectedNode = nodeAtMouse;
+          this.clearSelection(state);
+          updateSettingsPanel(state);
+          return;
       } else {
           state.selectedConnections = [];
+          state.selectedNode = null;
+          updateSettingsPanel(state);
       }
 
       state.dragSelecting = true;
@@ -141,6 +154,23 @@ export class SelectTool extends Tool {
   }
 
   onKeyDown(state, key) {
+    if (key === 'ArrowRight' || key === 'ArrowLeft') {
+        let changed = false;
+        state.selectedEntites.forEach(entity => {
+            if (entity.direction !== undefined) {
+                let dir = entity.direction;
+                if (key === 'ArrowRight') dir = (dir + 1) % 4;
+                if (key === 'ArrowLeft') dir = (dir + 3) % 4; // same as -1
+                entity.setEditableProperty('direction', dir);
+                changed = true;
+            }
+        });
+        if (changed) {
+            updateSettingsPanel(state);
+            return;
+        }
+    }
+
     if (key === config.hotkeys.drawConnection && !state.input.isCtrlDown) {
       this.startDrawingConnection(state);
     } else if (key === 'Delete' || key === 'Backspace') {

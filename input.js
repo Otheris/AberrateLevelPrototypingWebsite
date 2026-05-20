@@ -165,6 +165,23 @@ export function setupInputHandlers(canvas, state) {
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault(); // Prevent default scroll behavior
 
+    if (state.selectedEntites && state.selectedEntites.length > 0) {
+        let changed = false;
+        state.selectedEntites.forEach(entity => {
+            if (entity.direction !== undefined) {
+                let dir = entity.direction;
+                if (event.deltaY > 0) dir = (dir + 1) % 4; // Scroll down, rotate right
+                else dir = (dir + 3) % 4; // Scroll up, rotate left
+                entity.setEditableProperty('direction', dir);
+                changed = true;
+            }
+        });
+        if (changed) {
+            updateSettingsPanel(state);
+            return;
+        }
+    }
+
     // Determine zoom direction: negative deltaY = scroll up = zoom in
     const zoomDirection = event.deltaY > 0 ? -1 : 1;
 
@@ -301,6 +318,28 @@ export function setupInputHandlers(canvas, state) {
     exportBtn.addEventListener('click', async () => {
       await exportLevel(state);
     });
+  }
+
+  const solverExportBtn = document.getElementById('solverExportBtn');
+  if (solverExportBtn) {
+      solverExportBtn.addEventListener('click', async () => {
+          import('./solverExport.js').then(({ exportToSolver }) => {
+              const json = exportToSolver(state);
+              navigator.clipboard.writeText(json).then(() => {
+                  console.log("Solver Export copied to clipboard:\n", json);
+                  const notification = document.getElementById('notification');
+                  if (notification) {
+                      notification.innerText = "Copied Solver JSON to clipboard!";
+                      notification.classList.remove('hidden');
+                      notification.style.opacity = 1;
+                      setTimeout(() => {
+                          notification.style.opacity = 0;
+                          setTimeout(() => notification.classList.add('hidden'), 500);
+                      }, 3000);
+                  }
+              });
+          });
+      });
   }
 
   const importBtn = document.getElementById('importBtn');
