@@ -69,9 +69,37 @@ export async function exportLevel(state) {
         if (response.ok) {
             const webhookUrl = (await response.text()).trim();
             if (webhookUrl && webhookUrl.startsWith('http')) {
+                let contentMessage = "";
+
+                try {
+                    if (window.pako && window.base64js) {
+                        const dataToCompress = new TextEncoder().encode(jsonString);
+                        const compressed = window.pako.deflate(dataToCompress);
+                        const b64 = window.base64js.fromByteArray(compressed);
+                        const url = new URL(window.location.origin + window.location.pathname);
+                        url.searchParams.set('x', b64);
+
+                        const linkStr = url.toString();
+                        const markdownMsg = `# [Test level: ${levelName}](${linkStr})`;
+                        if (markdownMsg.length <= 4096) {
+                            contentMessage = markdownMsg;
+                        } else {
+                            contentMessage = "level too large for url export";
+                        }
+                    }
+                } catch (err) {
+                    console.error("Compression for URL failed:", err);
+                }
+
                 const blob = new Blob([jsonString], { type: 'application/json' });
                 const formData = new FormData();
                 formData.append('file', blob, `${levelName.replace(/[^a-zA-Z0-9]/g, '_') || 'level'}.json`);
+                if (contentMessage) {
+                    formData.append('payload_json', JSON.stringify({
+                        content: contentMessage,
+                        flags: 4 // suppress embeds
+                    }));
+                }
 
                 const webhookResponse = await fetch(webhookUrl, {
                     method: 'POST',

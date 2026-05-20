@@ -50,7 +50,9 @@ function renderLogicNode(container, logic, onChange, state) {
         if (t === 'TRUE' || t === 'FALSE') {
             onChange(t);
         } else if (t === 'BUTTON') {
-            onChange("");
+            // Use a specific internal string to represent "empty button ID"
+            // so it doesn't get coerced to falsy or TRUE in export
+            onChange("BUTTON_ID");
         } else if (t === 'NOT') {
             onChange({ op: 'NOT', args: ["TRUE"] });
         } else if (t === 'AND' || t === 'OR') {
@@ -66,7 +68,7 @@ function renderLogicNode(container, logic, onChange, state) {
     if (type === 'BUTTON') {
         const btnInput = document.createElement('input');
         btnInput.type = 'text';
-        btnInput.value = typeof logic === 'string' && logic !== 'TRUE' && logic !== 'FALSE' ? logic : '';
+        btnInput.value = typeof logic === 'string' && logic !== 'TRUE' && logic !== 'FALSE' && logic !== 'BUTTON_ID' ? logic : '';
         btnInput.placeholder = 'Button ID';
         btnInput.style.width = '80px';
         btnInput.addEventListener('change', (e) => {

@@ -2,6 +2,7 @@ export function evaluateAST(logic, state) {
     if (!logic) return true;
     if (logic === "TRUE") return true;
     if (logic === "FALSE") return false;
+    if (logic === "BUTTON_ID") return false; // Default unconfigured button ID to false so door stays closed
 
     if (typeof logic === 'string') {
         // It's a button ID
