@@ -12,6 +12,7 @@ export function serializeLevel(state) {
         tiles: state.tiles,
         rooms: state.rooms,
         nodeData: state.nodeData || [],
+        cubeTypes: state.cubeTypes,
         entities: []
     };
 
@@ -110,6 +111,7 @@ export function importLevel(state, jsonString) {
         if (data.tiles) state.tiles = cloneValue(data.tiles);
         if (data.rooms) state.rooms = cloneValue(data.rooms);
         if (data.nodeData) state.nodeData = cloneValue(data.nodeData);
+        if (data.cubeTypes) state.cubeTypes = cloneValue(data.cubeTypes);
 
         // Clear ephemeral UI selection state to avoid stale references
         state.selectedEntites = [];
@@ -160,7 +162,12 @@ export function importLevel(state, jsonString) {
 
             // if Box has specific color handling, make sure it applies
             if (entity.setCubeColor && entityData.color !== undefined) {
-                entity.setCubeColor(entityData.color);
+                // If it's an old save, map it. If it's a new save, the `options` dict
+                // will have populated `typeName` already and setCubeColor won't override it incorrectly
+                // if we check that color is a number.
+                if (typeof entityData.color === 'number') {
+                     entity.setCubeColor(entityData.color);
+                }
             }
 
             state.entities.push(entity);

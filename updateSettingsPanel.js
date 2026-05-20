@@ -99,6 +99,22 @@ export function updateSettingsPanel(state) {
             window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
           });
           label.appendChild(input);
+        } else if (prop.type === 'dropdown') {
+          label.innerText = prop.label + ': ';
+          const select = document.createElement('select');
+          prop.options.forEach(opt => {
+              const optionEl = document.createElement('option');
+              optionEl.value = opt;
+              optionEl.innerText = opt;
+              if (entity[prop.property] === opt) optionEl.selected = true;
+              select.appendChild(optionEl);
+          });
+          select.addEventListener('change', (e) => {
+            entity.setEditableProperty(prop.property, e.target.value);
+            import('./history.js').then(({ history }) => history.saveSnapshot(state));
+            window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
+          });
+          label.appendChild(select);
         } else if (prop.type === 'logic') {
           import('./uiLogicBuilder.js').then(({ renderLogicBuilder }) => {
               // check to avoid duplicate rendering race conditions
