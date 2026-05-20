@@ -139,6 +139,9 @@ export function importLevel(state, jsonString) {
                         }
                         component[key] = cloneValue(componentData[key]);
                     }
+                    if (componentName === 'SpriteRendererComponent') {
+                        component.image = null; // force reload image
+                    }
                 }
             }
 

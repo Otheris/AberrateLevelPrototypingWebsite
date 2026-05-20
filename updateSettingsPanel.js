@@ -27,6 +27,7 @@ export function updateSettingsPanel(state) {
       if (!newName) return;
 
       if (!state.nodeData) state.nodeData = [];
+      import('./history.js').then(({ history }) => history.saveSnapshot(state));
 
       // Since rooms could be reconstructed, we store nodeData relative to the center of the first rect
       const firstRect = state.selectedNode.rects[0];
@@ -82,6 +83,7 @@ export function updateSettingsPanel(state) {
           input.checked = entity[prop.property];
           input.addEventListener('change', (e) => {
             entity.setEditableProperty(prop.property, e.target.checked);
+            import('./history.js').then(({ history }) => history.saveSnapshot(state));
             window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
           });
           label.appendChild(input);
@@ -93,15 +95,23 @@ export function updateSettingsPanel(state) {
           input.value = entity[prop.property];
           input.addEventListener('change', (e) => {
             entity.setEditableProperty(prop.property, e.target.value);
+            import('./history.js').then(({ history }) => history.saveSnapshot(state));
             window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
           });
           label.appendChild(input);
         } else if (prop.type === 'logic') {
           import('./uiLogicBuilder.js').then(({ renderLogicBuilder }) => {
-              const logicContainer = document.createElement('div');
-              logicContainer.style.marginTop = '10px';
-              renderLogicBuilder(logicContainer, entity, state);
-              content.appendChild(logicContainer);
+              // check to avoid duplicate rendering race conditions
+              if (state.selectedEntites.length === 1 && state.selectedEntites[0].id === entity.id) {
+                  // verify not already added
+                  if (!content.querySelector('.logic-builder-container')) {
+                      const logicContainer = document.createElement('div');
+                      logicContainer.className = 'logic-builder-container';
+                      logicContainer.style.marginTop = '10px';
+                      renderLogicBuilder(logicContainer, entity, state);
+                      content.appendChild(logicContainer);
+                  }
+              }
           });
           return; // uiLogicBuilder handles its own appending
         }

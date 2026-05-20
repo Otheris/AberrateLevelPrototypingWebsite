@@ -13,6 +13,7 @@ export function renderLogicBuilder(container, entity, state) {
     renderLogicNode(wrapper, entity.logic, (newLogic) => {
         entity.logic = newLogic;
         entity.setEditableProperty('logic', newLogic);
+        import('./history.js').then(({ history }) => history.saveSnapshot(state));
         renderLogicBuilder(container, entity, state);
     }, state);
 

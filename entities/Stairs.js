@@ -57,12 +57,17 @@ export class Stairs extends Entity {
             value = value % 4;
         }
         super.setEditableProperty(key, value);
-        if (key === 'inverted') {
+        if (key === 'inverted' || key === 'direction') {
             this.updateVisuals();
         }
     }
 
     updateVisuals() {
+        const transform = this.getComponent(TransformComponent);
+        if (transform) {
+            transform.rotation = this.direction * Math.PI / 2;
+        }
+
         const renderer = this.getComponent(SpriteRendererComponent);
         if (renderer) {
             const isUp = this.inverted ? !this.isPowered : this.isPowered;

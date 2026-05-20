@@ -1,4 +1,5 @@
 import { computeNodes, getPointNode } from './utils/nodeUtils.js';
+import { entityTypes } from './editor.js';
 
 export function exportToSolver(state) {
     const nodesData = computeNodes(state);
@@ -19,8 +20,12 @@ export function exportToSolver(state) {
 
     // First pass: entities
     state.entities.forEach(entity => {
-        const type = entity.constructor.getName();
-        const transform = entity.getComponent('transform');
+        const typeKey = Object.keys(entityTypes).find(key => entity instanceof entityTypes[key]) || entity.constructor.name.toLowerCase();
+        let type = typeKey;
+        // In case they named constructor Name diff
+        if (type === 'box') type = 'box';
+
+        const transform = entity.getComponent('TransformComponent');
         if (!transform) return;
 
         const node = getPointNode(nodesData, transform.x, transform.y);
@@ -57,21 +62,34 @@ export function exportToSolver(state) {
             const stairId = `s${entity.id}`;
             // 0: Right (+x), 1: Down (+y), 2: Left (-x), 3: Up (-y)
             let dx = 0, dy = 0;
-            const dist = 50; // offset to check adjacent nodes
-            if (entity.direction === 0) dx = dist;
-            else if (entity.direction === 1) dy = dist;
-            else if (entity.direction === 2) dx = -dist;
-            else if (entity.direction === 3) dy = -dist;
+            if (entity.direction === 0) dx = 10;
+            else if (entity.direction === 1) dy = 10;
+            else if (entity.direction === 2) dx = -10;
+            else if (entity.direction === 3) dy = -10;
 
             const fromNode = getPointNode(nodesData, transform.x, transform.y);
-            const toNode = getPointNode(nodesData, transform.x + dx, transform.y + dy);
+            let toNode = null;
+
+            // Raycast starting from the center of the stairs
+            let rayX = transform.x;
+            let rayY = transform.y;
+            // Maximum distance to search (e.g. 500 pixels) to avoid infinite loops
+            for (let i = 0; i < 50; i++) {
+                rayX += dx;
+                rayY += dy;
+                let candidateNode = getPointNode(nodesData, rayX, rayY);
+                if (candidateNode && fromNode && candidateNode.z !== fromNode.z) {
+                    toNode = candidateNode;
+                    break;
+                }
+            }
 
             solverStairs.push({
                 id: stairId,
                 logic: entity.logic || "TRUE"
             });
 
-            if (fromNode && toNode && fromNode.id !== toNode.id) {
+            if (fromNode && toNode) {
                 solverEdges.push({
                     id: `e_${stairId}`,
                     from: fromNode.id,
