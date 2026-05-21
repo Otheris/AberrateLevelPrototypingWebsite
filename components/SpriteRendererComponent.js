@@ -8,7 +8,11 @@ export class SpriteRendererComponent extends Component {
         super();
         this.sprite = sprite;
         this.colorTint = colorTint;
+        this.isOutline = false;
         this.image = null;
+        this.tintedCanvas = null;
+        this.lastTint = null;
+        this.lastSourceStr = null;
         this.src = src;
         this.dest = dest;
     }
@@ -16,6 +20,9 @@ export class SpriteRendererComponent extends Component {
     clone() {
         const copy = super.clone();
         copy.image = null;
+        copy.tintedCanvas = null;
+        copy.lastTint = null;
+        copy.lastSourceStr = null;
         return copy;
     }
 
@@ -46,25 +53,82 @@ export class SpriteRendererComponent extends Component {
             }
             // Draw loaded image if ready, otherwise fallback to colored rect
             if (this.image.complete && this.image.naturalWidth > 0) {
-                ctx.drawImage(this.image, source.x, source.y, source.w, source.h, x, y, w, h);
+                if (this.isOutline && !this.isDotted) {
+                    ctx.strokeStyle = this.colorTint;
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(x, y, w, h);
+                } else {
+                    const sourceStr = `${source.x},${source.y},${source.w},${source.h}`;
+                    if (!this.tintedCanvas || this.lastTint !== this.colorTint || this.lastSourceStr !== sourceStr) {
+                        // Create a temporary canvas to apply the tint (cache it)
+                        this.tintedCanvas = document.createElement('canvas');
+                        this.tintedCanvas.width = source.w;
+                        this.tintedCanvas.height = source.h;
+                        const offscreenCtx = this.tintedCanvas.getContext('2d');
+
+                        // Draw the original sprite onto the temporary canvas
+                        offscreenCtx.drawImage(this.image, source.x, source.y, source.w, source.h, 0, 0, source.w, source.h);
+
+                        // Apply the tint using composite operation
+                        offscreenCtx.globalCompositeOperation = 'source-in';
+                        offscreenCtx.fillStyle = this.colorTint;
+                        offscreenCtx.fillRect(0, 0, source.w, source.h);
+
+                        this.lastTint = this.colorTint;
+                        this.lastSourceStr = sourceStr;
+                    }
+
+                    // Draw the tinted image back to the main canvas
+                    ctx.drawImage(this.tintedCanvas, 0, 0, source.w, source.h, x, y, w, h);
+
+                    if (this.isDotted) {
+                        ctx.strokeStyle = this.colorTint;
+                        ctx.lineWidth = 4;
+                        ctx.setLineDash([8, 8]);
+                        ctx.strokeRect(x - 4, y - 4, w + 8, h + 8);
+                        ctx.setLineDash([]);
+                    }
+                }
             } else {
-                if (this.colorTint.startsWith('rgba')) {
+                if (this.isOutline && !this.isDotted) {
+                    ctx.strokeStyle = this.colorTint;
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(x, y, w, h);
+                } else if (this.colorTint.startsWith('rgba')) {
                     ctx.strokeStyle = this.colorTint;
                     ctx.strokeRect(x, y, w, h);
                 } else {
                     ctx.fillStyle = this.colorTint;
                     ctx.fillRect(x, y, w, h);
+                    if (this.isDotted) {
+                        ctx.strokeStyle = this.colorTint;
+                        ctx.lineWidth = 4;
+                        ctx.setLineDash([8, 8]);
+                        ctx.strokeRect(x - 4, y - 4, w + 8, h + 8);
+                        ctx.setLineDash([]);
+                    }
                 }
             }
         } else {
-            // No sprite specified, draw colored rectangle
-            if (this.colorTint.startsWith('rgba')) {
+            // No sprite specified, draw colored rectangle or outline
+            if (this.isOutline && !this.isDotted) {
+                ctx.strokeStyle = this.colorTint;
+                ctx.lineWidth = 4;
+                ctx.strokeRect(x, y, w, h);
+            } else if (this.colorTint.startsWith('rgba')) {
                 ctx.strokeStyle = this.colorTint;
                 ctx.lineWidth = 2;
                 ctx.strokeRect(x, y, w, h);
             } else {
                 ctx.fillStyle = this.colorTint;
                 ctx.fillRect(x, y, w, h);
+                if (this.isDotted) {
+                    ctx.strokeStyle = this.colorTint;
+                    ctx.lineWidth = 4;
+                    ctx.setLineDash([8, 8]);
+                    ctx.strokeRect(x - 4, y - 4, w + 8, h + 8);
+                    ctx.setLineDash([]);
+                }
             }
         }
 

@@ -20,11 +20,23 @@ export class PlaymodeTool extends Tool {
   }
 
   onMouseDown(state, button) {
-    let entityAtMouse = this.findEntityAtMouse(state, state.playmodeEntities.filter(e => e instanceof Box));
+    let entityAtMouse = this.findEntityAtMouse(state, state.playmodeEntities.filter(e => {
+        if (e instanceof Box) {
+            // Cannot pick up outlined/inactive cubes
+            if (e.aberrationState === 'childrenActive' || e.aberrationState === 'inactiveChild') return false;
+            return true;
+        }
+        return false;
+    }));
     if (entityAtMouse) {
       state.playmodeDraggingEntity = entityAtMouse;
       state.highlightedEntities = [entityAtMouse];
       console.log('Started dragging entity in playmode:', entityAtMouse.getName());
+
+      // Update buttons when a cube is picked up
+      state.playmodeEntities.forEach(e => {
+        if (typeof e.checkPowered === 'function') e.checkPowered();
+      });
     }
   }
 
@@ -69,6 +81,11 @@ export class PlaymodeTool extends Tool {
       console.log('Stopped dragging entity in playmode:', state.playmodeDraggingEntity?.getName());
       state.playmodeDraggingEntity = null;
       state.highlightedEntities = [];
+
+      // Update buttons when a cube is dropped
+      state.playmodeEntities.forEach(e => {
+        if (typeof e.checkPowered === 'function') e.checkPowered();
+      });
     }
   }
 
@@ -97,6 +114,65 @@ export class PlaymodeTool extends Tool {
       if (recipe && recipe.outputs.length > 0) {
         console.log(`Fusing ${involvedTypes.join(', ')} into ${recipe.outputs.join(', ')}`);
 
+        // Handle parent relationships
+        let parentBoxes = allInvolvedBoxes.map(b => b.parentBox).filter(p => p !== null);
+        // Unique parents
+        parentBoxes = [...new Set(parentBoxes)];
+
+        let parentDataToInherit = null;
+
+        if (parentBoxes.length > 1) {
+            // Components have different parents: delete all parents, siblings become orphaned
+            parentBoxes.forEach(parent => {
+                state.removePlaymodeEntityFromState(parent);
+                parent.childBoxes.forEach(sibling => {
+                    if (!allInvolvedBoxes.includes(sibling)) {
+                        sibling.aberrationState = 'orphaned';
+                        sibling.parentBox = null;
+                        sibling.updateVisuals();
+                    }
+                });
+            });
+        } else if (parentBoxes.length === 1) {
+            const parent = parentBoxes[0];
+            const siblings = parent.childBoxes;
+            const otherSiblings = siblings.filter(s => !allInvolvedBoxes.includes(s));
+
+            if (otherSiblings.length === 0) {
+                // Components all have same parent, NO other siblings
+                // delete old parent, new fused cube gets original parent's parent data
+                parentDataToInherit = parent.parentBox;
+                state.removePlaymodeEntityFromState(parent);
+            } else {
+                // Components all have same parent, HAS other siblings
+                // delete old parent, create new parent cube, old siblings become orphans
+                state.removePlaymodeEntityFromState(parent);
+                otherSiblings.forEach(sibling => {
+                    sibling.aberrationState = 'orphaned';
+                    sibling.parentBox = null;
+                    sibling.updateVisuals();
+                });
+
+                // Spawn new parent cube
+                const draggedTransform = draggedBox.getComponent(TransformComponent);
+                const spawnX = draggedTransform ? draggedTransform.x : 0;
+                const spawnY = draggedTransform ? draggedTransform.y : 0;
+
+                const newParentType = recipe.outputs[0]; // Assuming first output is the new parent type
+                const newParent = new Box({
+                    typeName: newParentType,
+                    parentBox: parent.parentBox,
+                    aberrationState: 'parentActive'
+                });
+                const pTransform = newParent.getComponent(TransformComponent);
+                if (pTransform) {
+                    pTransform.x = spawnX;
+                    pTransform.y = spawnY;
+                }
+                state.addPlaymodeEntityToState(newParent);
+            }
+        }
+
         // Remove all involved boxes
         allInvolvedBoxes.forEach(b => {
           state.removePlaymodeEntityFromState(b);
@@ -107,17 +183,33 @@ export class PlaymodeTool extends Tool {
         const spawnX = transform ? transform.x : 0;
         const spawnY = transform ? transform.y : 0;
 
-        let offsetX = 0;
-        recipe.outputs.forEach(outputType => {
-            const newBox = new Box({ typeName: outputType });
-            const newTransform = newBox.getComponent(TransformComponent);
-            if (newTransform) {
-                newTransform.x = spawnX + offsetX;
-                newTransform.y = spawnY;
-            }
-            state.addPlaymodeEntityToState(newBox);
-            offsetX += 50;
-        });
+        // Skip spawning standard outputs if we just spawned a new parent cube
+        // because the new parent cube ALREADY represents the recipe outputs.
+        const didSpawnNewParent = parentBoxes.length === 1 && parentBoxes[0].childBoxes.filter(s => !allInvolvedBoxes.includes(s)).length > 0;
+
+        if (!didSpawnNewParent) {
+            let offsetX = 0;
+            recipe.outputs.forEach(outputType => {
+                const newBox = new Box({
+                    typeName: outputType,
+                    parentBox: parentDataToInherit,
+                    aberrationState: 'normal'
+                });
+                const newTransform = newBox.getComponent(TransformComponent);
+                if (newTransform) {
+                    newTransform.x = spawnX + offsetX;
+                    newTransform.y = spawnY;
+                }
+                state.addPlaymodeEntityToState(newBox);
+
+                // If the new box inherited a parent, we need to register it as a child
+                if (parentDataToInherit) {
+                    parentDataToInherit.childBoxes.push(newBox);
+                }
+
+                offsetX += 50;
+            });
+        }
 
         // Clear references since the dragged entity is destroyed
         state.playmodeDraggingEntity = null;
@@ -128,7 +220,17 @@ export class PlaymodeTool extends Tool {
 
   onKeyDown(state, key) {
     if (key === 'r') {
-      callMethodOnEntities('aberrate', state);
+      // Only aberrate boxes that are not inactive children (since they are driven by the parent)
+      state.playmodeEntities.forEach(e => {
+          if (e instanceof Box && e.aberrationState !== 'inactiveChild') {
+              if (typeof e.aberrate === 'function') e.aberrate(state);
+              else {
+                  // Fallback for components
+                  const comp = e.getComponent(AberrateCubeComponent);
+                  if (comp) comp.aberrate(state);
+              }
+          }
+      });
     }
   }
 

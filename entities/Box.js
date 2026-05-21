@@ -18,6 +18,9 @@ export class Box extends Entity {
     constructor(options = {}) {
         super(options);
         this.typeName = options.typeName || 'White';
+        this.aberrationState = options.aberrationState || 'normal'; // 'normal', 'parentActive', 'childrenActive', 'orphaned'
+        this.parentBox = options.parentBox || null;
+        this.childBoxes = options.childBoxes || [];
         this.addComponent(new BoxColliderComponent({ width: 40, height: 45 }));
         const renderer = new SpritesheetRendererComponent({ 
             sprite: Box.BOX_SPRITE_SHEET_PATH, 
@@ -69,6 +72,20 @@ export class Box extends Entity {
                 renderer.colorTint = typeDef.color;
             } else {
                 renderer.colorTint = '#ffffff';
+            }
+
+            if (this.aberrationState === 'normal') {
+                renderer.isOutline = false;
+                renderer.isDotted = false;
+            } else if (this.aberrationState === 'parentActive') {
+                renderer.isOutline = false;
+                renderer.isDotted = false;
+            } else if (this.aberrationState === 'childrenActive' || this.aberrationState === 'inactiveChild') {
+                renderer.isOutline = true;
+                renderer.isDotted = false;
+            } else if (this.aberrationState === 'orphaned') {
+                renderer.isOutline = false;
+                renderer.isDotted = true;
             }
         }
     }

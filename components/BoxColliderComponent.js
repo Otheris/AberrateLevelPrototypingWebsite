@@ -18,6 +18,12 @@ export class BoxColliderComponent extends Component {
         if (!transform) {
             return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
         }
+
+        // Return degenerate bounds if the entity is an inactive box
+        if (this.entity && (this.entity.aberrationState === 'childrenActive' || this.entity.aberrationState === 'inactiveChild')) {
+            return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+        }
+
         const x = transform.x + this.offsetX - this.width / 2;
         const y = transform.y + this.offsetY - this.height / 2;
         return {

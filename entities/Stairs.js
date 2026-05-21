@@ -22,9 +22,9 @@ export class Stairs extends Entity {
         this.isPowered = false;
         this.direction = options.direction || 0; // 0: Right, 1: Down, 2: Left, 3: Up
         this.addComponent(new BoxColliderComponent({ width: 120, height: 80 }));
+        // Intentionally ommiting the `sprite` so `SpriteRendererComponent` falls back to rect drawing
         this.addComponent(new SpriteRendererComponent({ 
             colorTint: '#55ccff',
-            src: { x: 0, y: 0, w: 40, h: 40 },
             dest: { x: 0, y: 0, w: 120, h: 80 }
         }));
         this.logic = options.logic || "TRUE";
@@ -68,13 +68,27 @@ export class Stairs extends Entity {
             transform.rotation = this.direction * Math.PI / 2;
         }
 
+        const collider = this.getComponent(BoxColliderComponent);
+        if (collider) {
+            // Swap width and height if rotated 90 or 270 degrees
+            if (this.direction === 1 || this.direction === 3) {
+                collider.width = 80;
+                collider.height = 120;
+            } else {
+                collider.width = 120;
+                collider.height = 80;
+            }
+        }
+
         const renderer = this.getComponent(SpriteRendererComponent);
         if (renderer) {
             const isUp = this.inverted ? !this.isPowered : this.isPowered;
             if (isUp) {
                 renderer.colorTint = '#55ccff';
+                renderer.isOutline = false;
             } else {
-                renderer.colorTint = 'rgba(85, 204, 255, 0.3)';
+                renderer.colorTint = '#55ccff';
+                renderer.isOutline = true;
             }
         }
     }
