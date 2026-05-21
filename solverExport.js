@@ -50,7 +50,7 @@ export function exportToSolver(state) {
             solverButtons.push({
                 id: btnId,
                 node: nodeId,
-                req_weight: entity.whiteOnly ? 2 : 1
+                req_weight: entity.requiredWeight !== undefined ? entity.requiredWeight : 1
             });
         } else if (type === 'box') {
             const boxId = `c${entity.id}`;
