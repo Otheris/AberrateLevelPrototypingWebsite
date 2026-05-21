@@ -18,6 +18,7 @@
         <button id="hitboxBtn" data-inactiveText="Show Hitboxes" data-activeText="Hide Hitboxes"></button>
         <button id="hotkeyBtn" data-inactiveText="Show Hotkeys" data-activeText="Hide Hotkeys"></button>
         <button id="cubeTypesBtn">Cube Types</button>
+        <button id="recipesBtn">Recipes</button>
         <button id="importBtn">Import</button>
         <button id="undoBtn">Undo</button>
         <button id="redoBtn">Redo</button>
@@ -36,6 +37,18 @@
       <button id="addCubeTypeBtn">+ Add Type</button>
       <div class="modal-actions">
         <button id="closeCubeTypesBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recipes Modal -->
+  <div id="recipesModal" class="modal hidden">
+    <div class="modal-content" style="width: 500px;">
+      <h2>Manage Recipes</h2>
+      <div id="recipesList"></div>
+      <button id="addRecipeBtn">+ Add Recipe</button>
+      <div class="modal-actions">
+        <button id="closeRecipesBtn">Close</button>
       </div>
     </div>
   </div>
