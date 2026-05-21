@@ -2,7 +2,7 @@ import { state, onPlayModeUpdate } from './editor.js';
 import { draw } from './renderer.js';
 import { setupInputHandlers } from './input.js';
 import { history } from './history.js';
-import { importLevel } from './io.js';
+import { importLevel, importLevelBinary } from './io.js';
 
 let canvas = document.getElementById('editor');
 let ctx = canvas.getContext('2d');
@@ -51,8 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const compressed = window.base64js.toByteArray(compressedLevel);
             const decompressed = window.pako.inflate(compressed);
-            const jsonString = new TextDecoder().decode(decompressed);
-            importLevel(state, jsonString);
+
+            // Check magic header for binary format (0x41 0x42 0x45 0x52)
+            if (decompressed.length >= 4 &&
+                decompressed[0] === 0x41 &&
+                decompressed[1] === 0x42 &&
+                decompressed[2] === 0x45 &&
+                decompressed[3] === 0x52) {
+                importLevelBinary(state, decompressed);
+            } else {
+                // Fallback to verbose JSON mode
+                const jsonString = new TextDecoder().decode(decompressed);
+                importLevel(state, jsonString);
+            }
 
             // Clean up URL so refresh doesn't trigger it again
             const url = new URL(window.location.href);
