@@ -11,6 +11,9 @@ export function serializeLevel(state) {
         camera: state.camera,
         tiles: state.tiles,
         rooms: state.rooms,
+        nodeData: state.nodeData || [],
+        cubeTypes: state.cubeTypes,
+        recipes: state.recipes,
         entities: []
     };
 
@@ -21,8 +24,14 @@ export function serializeLevel(state) {
             id: entity.id,
             type: typeKey,
             color: entity.color,
-            components: {}
+            components: {},
+            options: {}
         };
+
+        const editableProps = entity.getEditableProperties();
+        editableProps.forEach(prop => {
+            entityData.options[prop.property] = cloneValue(entity[prop.property]);
+        });
 
         entity.components.forEach(component => {
             const componentName = component.constructor.name;
@@ -61,9 +70,37 @@ export async function exportLevel(state) {
         if (response.ok) {
             const webhookUrl = (await response.text()).trim();
             if (webhookUrl && webhookUrl.startsWith('http')) {
+                let contentMessage = "";
+
+                try {
+                    if (window.pako && window.base64js) {
+                        const dataToCompress = new TextEncoder().encode(jsonString);
+                        const compressed = window.pako.deflate(dataToCompress);
+                        const b64 = window.base64js.fromByteArray(compressed);
+                        const url = new URL(window.location.origin + window.location.pathname);
+                        url.searchParams.set('x', b64);
+
+                        const linkStr = url.toString();
+                        const markdownMsg = `# [Test level: ${levelName}](${linkStr})`;
+                        if (markdownMsg.length <= 4096) {
+                            contentMessage = markdownMsg;
+                        } else {
+                            contentMessage = "level too large for url export";
+                        }
+                    }
+                } catch (err) {
+                    console.error("Compression for URL failed:", err);
+                }
+
                 const blob = new Blob([jsonString], { type: 'application/json' });
                 const formData = new FormData();
                 formData.append('file', blob, `${levelName.replace(/[^a-zA-Z0-9]/g, '_') || 'level'}.json`);
+                if (contentMessage) {
+                    formData.append('payload_json', JSON.stringify({
+                        content: contentMessage,
+                        flags: 4 // suppress embeds
+                    }));
+                }
 
                 const webhookResponse = await fetch(webhookUrl, {
                     method: 'POST',
@@ -102,6 +139,17 @@ export function importLevel(state, jsonString) {
         if (data.camera) state.camera = { ...data.camera };
         if (data.tiles) state.tiles = cloneValue(data.tiles);
         if (data.rooms) state.rooms = cloneValue(data.rooms);
+        if (data.nodeData) state.nodeData = cloneValue(data.nodeData);
+        if (data.cubeTypes) state.cubeTypes = cloneValue(data.cubeTypes);
+        if (data.recipes) {
+            state.recipes = cloneValue(data.recipes);
+        } else {
+            // Default recipes if not present in save
+            state.recipes = [
+                { id: 'r1', inputs: ['Red', 'Blue'], outputs: ['White'] },
+                { id: 'r2', inputs: ['White'], outputs: ['Red', 'Blue'] }
+            ];
+        }
 
         // Clear ephemeral UI selection state to avoid stale references
         state.selectedEntites = [];
@@ -137,12 +185,27 @@ export function importLevel(state, jsonString) {
                         }
                         component[key] = cloneValue(componentData[key]);
                     }
+                    if (componentName === 'SpriteRendererComponent') {
+                        component.image = null; // force reload image
+                    }
+                }
+            }
+
+            // Apply entity options
+            if (entityData.options) {
+                for (const [key, value] of Object.entries(entityData.options)) {
+                    entity.setEditableProperty(key, value);
                 }
             }
 
             // if Box has specific color handling, make sure it applies
             if (entity.setCubeColor && entityData.color !== undefined) {
-                entity.setCubeColor(entityData.color);
+                // If it's an old save, map it. If it's a new save, the `options` dict
+                // will have populated `typeName` already and setCubeColor won't override it incorrectly
+                // if we check that color is a number.
+                if (typeof entityData.color === 'number') {
+                     entity.setCubeColor(entityData.color);
+                }
             }
 
             state.entities.push(entity);

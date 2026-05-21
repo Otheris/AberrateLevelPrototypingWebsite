@@ -40,6 +40,10 @@ export class Entity {
         fn.call(component, ...args);
       }
     }
+    // Also try to call the method on the entity itself
+    if (typeof this[method] === 'function') {
+      this[method](...args);
+    }
   }
 
   addComponent(component) {

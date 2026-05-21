@@ -1,7 +1,7 @@
 import { AberrateCubeComponent } from '../components/AberrateCubeComponent.js';
 import { BoxColliderComponent } from '../components/BoxColliderComponent.js';
 import { TransformComponent } from '../components/TransformComponent.js';
-import { callMethodOnEntities, onEntityHotkeyPressed } from '../editor.js';
+import { callMethodOnEntities } from '../editor.js';
 import { Tool } from './Tool.js';
 import { Box } from '../entities/Box.js';
 
@@ -20,13 +20,7 @@ export class PlaymodeTool extends Tool {
   }
 
   onMouseDown(state, button) {
-    let entityAtMouse = this.findEntityAtMouse(state, state.playmodeEntities.filter(e => {
-      const aberrateComponent = e.getComponent(AberrateCubeComponent);
-      if (aberrateComponent) {
-        return aberrateComponent.aberrated === false;
-      }
-      return false;
-    }));
+    let entityAtMouse = this.findEntityAtMouse(state, state.playmodeEntities.filter(e => e instanceof Box));
     if (entityAtMouse) {
       state.playmodeDraggingEntity = entityAtMouse;
       state.highlightedEntities = [entityAtMouse];
@@ -46,18 +40,20 @@ export class PlaymodeTool extends Tool {
       state.highlightedEntities = [state.playmodeDraggingEntity];
       state.playmodeDraggingOverlaps = [];
       const collider = state.playmodeDraggingEntity.getComponent(BoxColliderComponent);
-      state.playmodeEntities.forEach(other => {
-        if (other === state.playmodeDraggingEntity) {
-          return;
-        }
-        const otherCollider = other.getComponent(BoxColliderComponent);
-        if (otherCollider) {
-          if (collider.intersects(otherCollider)) {
-            state.highlightedEntities.push(other);
-            state.playmodeDraggingOverlaps.push(other);
+      if (collider) {
+        state.playmodeEntities.forEach(other => {
+          if (other === state.playmodeDraggingEntity) {
+            return;
           }
-        }
-      });
+          const otherCollider = other.getComponent(BoxColliderComponent);
+          if (otherCollider) {
+            if (collider.intersects(otherCollider)) {
+              state.highlightedEntities.push(other);
+              state.playmodeDraggingOverlaps.push(other);
+            }
+          }
+        });
+      }
     }
   }
 
@@ -70,34 +66,62 @@ export class PlaymodeTool extends Tool {
         this.dropHeldEntity(state);
       }
 
-      console.log('Stopped dragging entity in playmode:', state.playmodeDraggingEntity.getName());
+      console.log('Stopped dragging entity in playmode:', state.playmodeDraggingEntity?.getName());
       state.playmodeDraggingEntity = null;
       state.highlightedEntities = [];
     }
   }
 
   dropHeldEntity(state) {
+    if (!state.recipes) return;
+
     if (state.playmodeDraggingEntity instanceof Box) {
-      const box = state.playmodeDraggingEntity.getComponent?.(AberrateCubeComponent);
-      const otherBoxComponents = [];
-      console.log('dropheld: ' + state.playmodeDraggingOverlaps);
-      state.playmodeDraggingOverlaps.forEach(entity => {
-        if (entity instanceof Box) {
-          const aberrateComponent = entity.getComponent?.(AberrateCubeComponent);
-          if (aberrateComponent) {
-            if (aberrateComponent.aberrated) return; // don't allow fusing with aberrated cubes
-            otherBoxComponents.push(aberrateComponent);
-          }
-        }
+      const draggedBox = state.playmodeDraggingEntity;
+      const overlaps = state.playmodeDraggingOverlaps.filter(e => e instanceof Box);
+
+      if (overlaps.length === 0) return;
+
+      const allInvolvedBoxes = [draggedBox, ...overlaps];
+      const involvedTypes = allInvolvedBoxes.map(b => b.typeName);
+
+      // Sort for comparison
+      const involvedSorted = [...involvedTypes].sort();
+
+      // Find a recipe that matches these exact inputs
+      const recipe = state.recipes.find(r => {
+        if (r.inputs.length !== involvedSorted.length) return false;
+        const recipeInputsSorted = [...r.inputs].sort();
+        return involvedSorted.every((val, index) => val === recipeInputsSorted[index]);
       });
 
-      // attempt to fuse held box with boxes being dropped on
-      if (otherBoxComponents.length > 0) {
-        otherBoxComponents.forEach(b => {
-          // will propagate fusion to all connected boxes, so only need to call on one of them
-          console.log(`Attempting to fuse box with color ${box.color} with box with color ${b.colorId}`);
-          box.tryFuseWith(state, b);
-        })
+      if (recipe && recipe.outputs.length > 0) {
+        console.log(`Fusing ${involvedTypes.join(', ')} into ${recipe.outputs.join(', ')}`);
+
+        // Remove all involved boxes
+        allInvolvedBoxes.forEach(b => {
+          state.removePlaymodeEntityFromState(b);
+        });
+
+        // Spawn the output boxes at the dragged box's position
+        const transform = draggedBox.getComponent(TransformComponent);
+        const spawnX = transform ? transform.x : 0;
+        const spawnY = transform ? transform.y : 0;
+
+        let offsetX = 0;
+        recipe.outputs.forEach(outputType => {
+            const newBox = new Box({ typeName: outputType });
+            const newTransform = newBox.getComponent(TransformComponent);
+            if (newTransform) {
+                newTransform.x = spawnX + offsetX;
+                newTransform.y = spawnY;
+            }
+            state.addPlaymodeEntityToState(newBox);
+            offsetX += 50;
+        });
+
+        // Clear references since the dragged entity is destroyed
+        state.playmodeDraggingEntity = null;
+        state.highlightedEntities = [];
       }
     }
   }
@@ -109,6 +133,5 @@ export class PlaymodeTool extends Tool {
   }
 
   onKeyUp(state, key) {
-    // TODO: Implement keyboard shortcuts for select tool
   }
 }
