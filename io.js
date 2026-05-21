@@ -13,6 +13,7 @@ export function serializeLevel(state) {
         rooms: state.rooms,
         nodeData: state.nodeData || [],
         cubeTypes: state.cubeTypes,
+        recipes: state.recipes,
         entities: []
     };
 
@@ -140,6 +141,15 @@ export function importLevel(state, jsonString) {
         if (data.rooms) state.rooms = cloneValue(data.rooms);
         if (data.nodeData) state.nodeData = cloneValue(data.nodeData);
         if (data.cubeTypes) state.cubeTypes = cloneValue(data.cubeTypes);
+        if (data.recipes) {
+            state.recipes = cloneValue(data.recipes);
+        } else {
+            // Default recipes if not present in save
+            state.recipes = [
+                { id: 'r1', inputs: ['Red', 'Blue'], outputs: ['White'] },
+                { id: 'r2', inputs: ['White'], outputs: ['Red', 'Blue'] }
+            ];
+        }
 
         // Clear ephemeral UI selection state to avoid stale references
         state.selectedEntites = [];
