@@ -99,6 +99,19 @@ export function updateSettingsPanel(state) {
             window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
           });
           label.appendChild(input);
+        } else if (prop.type === 'number') {
+          label.innerText = prop.label + ': ';
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.value = entity[prop.property];
+          input.addEventListener('change', (e) => {
+            let val = parseFloat(e.target.value);
+            if (isNaN(val)) val = 0;
+            entity.setEditableProperty(prop.property, val);
+            import('./history.js').then(({ history }) => history.saveSnapshot(state));
+            window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
+          });
+          label.appendChild(input);
         } else if (prop.type === 'dropdown') {
           label.innerText = prop.label + ': ';
           const select = document.createElement('select');
