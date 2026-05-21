@@ -18,7 +18,7 @@ export class Button extends Entity {
 
     constructor(options = {}) {
         super(options);
-        this.whiteOnly = options.whiteOnly || false;
+        this.requiredWeight = options.requiredWeight !== undefined ? options.requiredWeight : 1;
         this.name = options.name || "b" + this.id;
         this.addComponent(new BoxColliderComponent({ width: 60, height: 60 }));
         this.addComponent(new SpriteRendererComponent({
@@ -46,14 +46,14 @@ export class Button extends Entity {
 
     getEditableProperties() {
         return [
-            { property: 'whiteOnly', type: 'checkbox', label: 'White Only' },
+            { property: 'requiredWeight', type: 'number', label: 'Required Weight' },
             { property: 'name', type: 'text', label: 'Name (ID)' }
         ];
     }
 
     setEditableProperty(key, value) {
         super.setEditableProperty(key, value);
-        if (key === 'whiteOnly') {
+        if (key === 'requiredWeight') {
             this.updateVisuals();
         } else if (key === 'name') {
             const textComp = this.getComponent(TextRendererComponent);
@@ -66,7 +66,7 @@ export class Button extends Entity {
     updateVisuals() {
         const transform = this.getComponent(TransformComponent);
         if (transform) {
-            transform.rotation = this.whiteOnly ? Math.PI / 4 : 0;
+            transform.rotation = 0;
         }
     }
 
@@ -97,7 +97,14 @@ export class Button extends Entity {
                     const maxY2 = boxTransform.y + boxCollider.height/2;
 
                     if (minX1 < maxX2 && maxX1 > minX2 && minY1 < maxY2 && maxY1 > minY2) {
-                        if (!this.whiteOnly || entity.color === Box.BOX_COLOR_WHITE) {
+                        let weight = 1;
+                        if (state && state.cubeTypes) {
+                            const typeDef = state.cubeTypes.find(t => t.name === entity.typeName);
+                            if (typeDef) {
+                                weight = typeDef.weight;
+                            }
+                        }
+                        if (weight >= this.requiredWeight) {
                             isPowered = true;
                         }
                     }
