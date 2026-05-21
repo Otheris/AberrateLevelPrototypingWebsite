@@ -195,25 +195,49 @@ export function setupInputHandlers(canvas, state) {
     zoom(zoomDirection, state.mouse.x, state.mouse.y, canvasWidth, canvasHeight);
   });
 
+  // Helpers to check if input should be processed
+  const isModalOpen = () => {
+    const modals = document.querySelectorAll('.modal:not(.hidden)');
+    return modals.length > 0;
+  };
+
+  const isTextFieldFocused = () => {
+    const tag = document.activeElement ? document.activeElement.tagName : '';
+    return tag === 'INPUT' || tag === 'TEXTAREA';
+  };
+
   /**
    * KEYBOARD - KEY DOWN
    * Tracks modifier keys like Alt for alt+drag camera panning
    */
   document.addEventListener('keydown', (event) => {
     if (event.repeat) return; // don't allow repeat key pressed for held key
-    const lastTool = state.currentTool;
-    const lastEntity = state.selectedEntityType;
-    keyDown(event.key);
-    const newTool = state.currentTool;
-    const newEntity = state.selectedEntityType;
-    if (lastTool !== newTool) {
-      updateToolButtonsUI();
-    }
-    if (lastEntity !== newEntity) {
-      updateEntityButtonsUI(state);
+
+    const modalOpen = isModalOpen();
+    const textFocused = isTextFieldFocused();
+
+    // Do not process tool shortcuts or entity hotkeys if modal is open or text is focused
+    if (!modalOpen && !textFocused) {
+      const lastTool = state.currentTool;
+      const lastEntity = state.selectedEntityType;
+      keyDown(event.key);
+      const newTool = state.currentTool;
+      const newEntity = state.selectedEntityType;
+      if (lastTool !== newTool) {
+        updateToolButtonsUI();
+      }
+      if (lastEntity !== newEntity) {
+        updateEntityButtonsUI(state);
+      }
     }
 
-    if (state.input.isCtrlDown) {
+    // Ctrl state tracking needs to be updated even if modal/text is open so we don't get stuck
+    if (event.key.toLowerCase() === 'control') {
+      state.input.isCtrlDown = true;
+    }
+
+    // Process Undo/Redo only if modal is not open (allow if text field focused as per requirements)
+    if (!modalOpen && state.input.isCtrlDown) {
       if (event.key.toLowerCase() === 'z') {
         history.undo(state);
       } else if (event.key.toLowerCase() === 'y') {
@@ -227,12 +251,22 @@ export function setupInputHandlers(canvas, state) {
    * Stops tracking modifier keys
    */
   document.addEventListener('keyup', (event) => {
-    const wasAltActive = isAltOverrideActive();
-    keyUp(event.key);
-    const isAltActive = isAltOverrideActive();
-    // Update buttons if Alt state changed
-    if (event.key.toLowerCase() === config.altModeKey && wasAltActive !== isAltActive) {
-      updateToolButtonsUI();
+    // Ctrl tracking release needs to be updated even if blocked
+    if (event.key.toLowerCase() === 'control') {
+      state.input.isCtrlDown = false;
+    }
+
+    const modalOpen = isModalOpen();
+    const textFocused = isTextFieldFocused();
+
+    if (!modalOpen && !textFocused) {
+      const wasAltActive = isAltOverrideActive();
+      keyUp(event.key);
+      const isAltActive = isAltOverrideActive();
+      // Update buttons if Alt state changed
+      if (event.key.toLowerCase() === config.altModeKey && wasAltActive !== isAltActive) {
+        updateToolButtonsUI();
+      }
     }
   });
 

@@ -95,6 +95,12 @@ export async function exportLevel(state) {
                 const blob = new Blob([jsonString], { type: 'application/json' });
                 const formData = new FormData();
                 formData.append('file', blob, `${levelName.replace(/[^a-zA-Z0-9]/g, '_') || 'level'}.json`);
+                if (contentMessage) {
+                    formData.append('payload_json', JSON.stringify({
+                        content: contentMessage,
+                        flags: 4 // suppress embeds
+                    }));
+                }
 
                 // Also get an image from the canvas
                 const canvas = document.getElementById('editor');
