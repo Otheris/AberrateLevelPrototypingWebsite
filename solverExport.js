@@ -164,10 +164,7 @@ export function exportToSolver(state) {
         buttons: solverButtons,
         doors: solverDoors,
         stairs: solverStairs,
-        recipes: [
-            {"id": "r1", "inputs": ["Red", "Blue"], "outputs": ["White"]},
-            {"id": "r2", "inputs": ["White"], "outputs": ["Red", "Blue"]}
-        ],
+        recipes: state.recipes || [],
         cube_types: solverCubeTypes,
         exit_door_id: exitDoorId,
         exit_node: exitNode,

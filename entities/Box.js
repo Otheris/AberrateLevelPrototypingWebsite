@@ -30,9 +30,7 @@ export class Box extends Entity {
         // We always use the white sprite (index 0) and tint it
         renderer.setSpriteIndex(0);
 
-        // This component was probably expecting the old numeric IDs.
-        // It might not work perfectly with new dynamic strings, but we keep it for now.
-        this.addComponent(new AberrateCubeComponent({ colorId: 0 }));
+        this.addComponent(new AberrateCubeComponent());
 
         // Wait a tick for editor state to be fully loaded if this is during import
         setTimeout(() => this.updateVisuals(), 0);

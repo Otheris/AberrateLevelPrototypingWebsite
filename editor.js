@@ -86,6 +86,12 @@ export const state = {
     { name: 'Blue', weight: 1, color: '#0000ff' }
   ],
 
+  // Custom cube recipes for the level
+  recipes: [
+    { id: 'r1', inputs: ['Red', 'Blue'], outputs: ['White'] },
+    { id: 'r2', inputs: ['White'], outputs: ['Red', 'Blue'] }
+  ],
+
   // UI state
   selectedToolName: 'camera',
   previousToolName: 'camera',
