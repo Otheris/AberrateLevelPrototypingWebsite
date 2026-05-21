@@ -7,6 +7,8 @@ import { config, mouseDown, mouseUp, keyDown, keyUp, mouseMove, zoom, setTool, a
 import { exportLevel, importLevel } from './io.js';
 import { history } from './history.js';
 import { updateSettingsPanel } from './updateSettingsPanel.js';
+import { setupCubeTypesModal } from './cubeTypesModal.js';
+import { setupRecipesModal } from './recipesModal.js';
 
 /**
  * Generate entity buttons dynamically from entityTypes
@@ -165,6 +167,23 @@ export function setupInputHandlers(canvas, state) {
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault(); // Prevent default scroll behavior
 
+    if (state.selectedEntites && state.selectedEntites.length > 0) {
+        let changed = false;
+        state.selectedEntites.forEach(entity => {
+            if (entity.direction !== undefined) {
+                let dir = entity.direction;
+                if (event.deltaY > 0) dir = (dir + 1) % 4; // Scroll down, rotate right
+                else dir = (dir + 3) % 4; // Scroll up, rotate left
+                entity.setEditableProperty('direction', dir);
+                changed = true;
+            }
+        });
+        if (changed) {
+            updateSettingsPanel(state);
+            return;
+        }
+    }
+
     // Determine zoom direction: negative deltaY = scroll up = zoom in
     const zoomDirection = event.deltaY > 0 ? -1 : 1;
 
@@ -176,25 +195,49 @@ export function setupInputHandlers(canvas, state) {
     zoom(zoomDirection, state.mouse.x, state.mouse.y, canvasWidth, canvasHeight);
   });
 
+  // Helpers to check if input should be processed
+  const isModalOpen = () => {
+    const modals = document.querySelectorAll('.modal:not(.hidden)');
+    return modals.length > 0;
+  };
+
+  const isTextFieldFocused = () => {
+    const tag = document.activeElement ? document.activeElement.tagName : '';
+    return tag === 'INPUT' || tag === 'TEXTAREA';
+  };
+
   /**
    * KEYBOARD - KEY DOWN
    * Tracks modifier keys like Alt for alt+drag camera panning
    */
   document.addEventListener('keydown', (event) => {
     if (event.repeat) return; // don't allow repeat key pressed for held key
-    const lastTool = state.currentTool;
-    const lastEntity = state.selectedEntityType;
-    keyDown(event.key);
-    const newTool = state.currentTool;
-    const newEntity = state.selectedEntityType;
-    if (lastTool !== newTool) {
-      updateToolButtonsUI();
-    }
-    if (lastEntity !== newEntity) {
-      updateEntityButtonsUI(state);
+
+    const modalOpen = isModalOpen();
+    const textFocused = isTextFieldFocused();
+
+    // Do not process tool shortcuts or entity hotkeys if modal is open or text is focused
+    if (!modalOpen && !textFocused) {
+      const lastTool = state.currentTool;
+      const lastEntity = state.selectedEntityType;
+      keyDown(event.key);
+      const newTool = state.currentTool;
+      const newEntity = state.selectedEntityType;
+      if (lastTool !== newTool) {
+        updateToolButtonsUI();
+      }
+      if (lastEntity !== newEntity) {
+        updateEntityButtonsUI(state);
+      }
     }
 
-    if (state.input.isCtrlDown) {
+    // Ctrl state tracking needs to be updated even if modal/text is open so we don't get stuck
+    if (event.key.toLowerCase() === 'control') {
+      state.input.isCtrlDown = true;
+    }
+
+    // Process Undo/Redo only if modal is not open (allow if text field focused as per requirements)
+    if (!modalOpen && state.input.isCtrlDown) {
       if (event.key.toLowerCase() === 'z') {
         history.undo(state);
       } else if (event.key.toLowerCase() === 'y') {
@@ -208,12 +251,22 @@ export function setupInputHandlers(canvas, state) {
    * Stops tracking modifier keys
    */
   document.addEventListener('keyup', (event) => {
-    const wasAltActive = isAltOverrideActive();
-    keyUp(event.key);
-    const isAltActive = isAltOverrideActive();
-    // Update buttons if Alt state changed
-    if (event.key.toLowerCase() === config.altModeKey && wasAltActive !== isAltActive) {
-      updateToolButtonsUI();
+    // Ctrl tracking release needs to be updated even if blocked
+    if (event.key.toLowerCase() === 'control') {
+      state.input.isCtrlDown = false;
+    }
+
+    const modalOpen = isModalOpen();
+    const textFocused = isTextFieldFocused();
+
+    if (!modalOpen && !textFocused) {
+      const wasAltActive = isAltOverrideActive();
+      keyUp(event.key);
+      const isAltActive = isAltOverrideActive();
+      // Update buttons if Alt state changed
+      if (event.key.toLowerCase() === config.altModeKey && wasAltActive !== isAltActive) {
+        updateToolButtonsUI();
+      }
     }
   });
 
@@ -302,6 +355,31 @@ export function setupInputHandlers(canvas, state) {
       await exportLevel(state);
     });
   }
+
+  const solverExportBtn = document.getElementById('solverExportBtn');
+  if (solverExportBtn) {
+      solverExportBtn.addEventListener('click', async () => {
+          import('./solverExport.js').then(({ exportToSolver }) => {
+              const json = exportToSolver(state);
+              navigator.clipboard.writeText(json).then(() => {
+                  console.log("Solver Export copied to clipboard:\n", json);
+                  const notification = document.getElementById('notification');
+                  if (notification) {
+                      notification.innerText = "Copied Solver JSON to clipboard!";
+                      notification.classList.remove('hidden');
+                      notification.style.opacity = 1;
+                      setTimeout(() => {
+                          notification.style.opacity = 0;
+                          setTimeout(() => notification.classList.add('hidden'), 500);
+                      }, 3000);
+                  }
+              });
+          });
+      });
+  }
+
+  setupCubeTypesModal();
+  setupRecipesModal();
 
   const importBtn = document.getElementById('importBtn');
   if (importBtn) {

@@ -17,13 +17,43 @@
       <div class="level-actions">
         <button id="hitboxBtn" data-inactiveText="Show Hitboxes" data-activeText="Hide Hitboxes"></button>
         <button id="hotkeyBtn" data-inactiveText="Show Hotkeys" data-activeText="Hide Hotkeys"></button>
+        <button id="cubeTypesBtn">Cube Types</button>
+        <button id="recipesBtn">Recipes</button>
         <button id="importBtn">Import</button>
         <button id="undoBtn">Undo</button>
         <button id="redoBtn">Redo</button>
         <button id="exportBtn">Export</button>
+        <button id="solverExportBtn" style="background-color:#4CAF50; color:white;">Solver Export</button>
       </div>
     </div>
   </div>
+
+
+  <!-- Cube Types Modal -->
+  <div id="cubeTypesModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Manage Cube Types</h2>
+      <div id="cubeTypesList"></div>
+      <button id="addCubeTypeBtn">+ Add Type</button>
+      <div class="modal-actions">
+        <button id="closeCubeTypesBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recipes Modal -->
+  <div id="recipesModal" class="modal hidden">
+    <div class="modal-content" style="width: 500px;">
+      <h2>Manage Recipes</h2>
+      <div id="recipesList"></div>
+      <button id="addRecipeBtn">+ Add Recipe</button>
+      <div class="modal-actions">
+        <button id="closeRecipesBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification" class="hidden" style="position: absolute; top: 10px; right: 10px; background-color: #4CAF50; color: white; padding: 10px; border-radius: 5px; z-index: 1000; transition: opacity 0.5s;"></div>
 
   <!-- Canvas Area -->
   <div id="editor-layout" style="display: flex; height: calc(100vh - 120px);">
@@ -54,6 +84,8 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/base64-js@1.5.1/base64js.min.js"></script>
 <script type="module" src="main.js"></script>
 </body>
 </html>

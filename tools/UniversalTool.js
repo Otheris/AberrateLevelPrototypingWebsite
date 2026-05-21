@@ -55,16 +55,6 @@ export class UniversalTool extends Tool {
 		else if (key.toLowerCase() === ';') {
 			console.log('Current state:', state);
 		}
-		else if (key === '`' || key === '~') {
-			// Toggle whiteOnly on selected buttons
-			if (state.selectedEntites) {
-				state.selectedEntites.forEach(entity => {
-					if (entity.getName() === 'button') {
-						entity.setEditableProperty('whiteOnly', !entity.whiteOnly);
-					}
-				});
-			}
-		}
 		else if (key.toLowerCase() === 'control') {
 			state.input.isCtrlDown = true;
 		}
