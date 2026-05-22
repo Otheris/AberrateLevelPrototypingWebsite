@@ -10,6 +10,7 @@
   <!-- Top Bar -->
   <div id="topBar" class="bar">
     <div class="bar-content">
+      <button id="helpBtn" class="help-btn" title="Help / Tutorial">?</button>
       <h1>Level Editor</h1>
       <div class="level-info">
         <input type="text" id="levelName" placeholder="Level Name" value="Untitled">
@@ -22,7 +23,13 @@
         <button id="importBtn">Import</button>
         <button id="undoBtn">Undo</button>
         <button id="redoBtn">Redo</button>
-        <button id="exportBtn">Export</button>
+        <div class="export-group">
+          <button id="exportBtn">Export</button>
+          <select id="webhookSelect">
+            <option value="">None</option>
+          </select>
+          <button id="manageWebhooksBtn" title="Manage Webhooks">+</button>
+        </div>
         <button id="solverExportBtn" style="background-color:#4CAF50; color:white;">Solver Export</button>
       </div>
     </div>
@@ -49,6 +56,44 @@
       <button id="addRecipeBtn">+ Add Recipe</button>
       <div class="modal-actions">
         <button id="closeRecipesBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Webhooks Modal -->
+  <div id="webhooksModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Manage Discord Webhooks</h2>
+      <div id="webhooksList"></div>
+      <button id="addWebhookBtn">+ Add Webhook</button>
+      <div class="modal-actions">
+        <button id="closeWebhooksBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tutorial Modal -->
+  <div id="tutorialModal" class="modal hidden">
+    <div class="modal-content" style="width: 600px; max-width: 95vw; max-height: 90vh; overflow-y: auto;">
+      <h2>Welcome to the Level Editor</h2>
+      <p style="margin-bottom: 15px;">Here is a quick overview of how to use the editor:</p>
+
+      <ul style="margin-left: 20px; margin-bottom: 15px; line-height: 1.5;">
+        <li><strong>Draw Rooms:</strong> Use the Rooms tool to draw the layout of your puzzle.</li>
+        <li><strong>Add Entities:</strong> Use the Entities tool to place objects like buttons, actuators, and cubes.</li>
+        <li><strong>Add Logic:</strong> Select entities to configure their properties and connect logic in the settings panel.</li>
+        <li><strong>Play Mode:</strong> Click the Play button in the top right to simulate and test your puzzle.</li>
+        <li><strong>Export:</strong> Name your level at the top and export it.</li>
+      </ul>
+
+      <p style="margin-bottom: 15px;"><strong>Discord Sharing:</strong> Remember to input your Discord webhook links via the '+' button next to Export so you can easily share your puzzles with the team!</p>
+
+      <div style="text-align: center; margin-bottom: 20px;">
+        <p><em>(Screenshots would go here)</em></p>
+      </div>
+
+      <div class="modal-actions">
+        <button id="closeTutorialBtn">Got it!</button>
       </div>
     </div>
   </div>

@@ -44,6 +44,29 @@ setupInputHandlers(canvas, state);
 document.addEventListener('DOMContentLoaded', () => {
     resizeCanvas();
 
+    // Tutorial logic
+    const tutorialSeen = localStorage.getItem('tutorialSeen');
+    const tutorialModal = document.getElementById('tutorialModal');
+    const closeTutorialBtn = document.getElementById('closeTutorialBtn');
+    const helpBtn = document.getElementById('helpBtn');
+
+    if (!tutorialSeen) {
+        if (tutorialModal) tutorialModal.classList.remove('hidden');
+        localStorage.setItem('tutorialSeen', 'true');
+    }
+
+    if (closeTutorialBtn) {
+        closeTutorialBtn.addEventListener('click', () => {
+            if (tutorialModal) tutorialModal.classList.add('hidden');
+        });
+    }
+
+    if (helpBtn) {
+        helpBtn.addEventListener('click', () => {
+            if (tutorialModal) tutorialModal.classList.remove('hidden');
+        });
+    }
+
     // Check for level data in URL
     const params = new URLSearchParams(window.location.search);
     const compressedLevel = params.get('x');
