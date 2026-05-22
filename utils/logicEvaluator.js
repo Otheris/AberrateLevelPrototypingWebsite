@@ -10,7 +10,7 @@ export function evaluateAST(logic, state) {
         const btn = playmodeEntities.find(e => e.constructor.getName() === 'button' && e.name === logic);
         if (btn) {
             // we check if it has a signalsender and what its current state is
-            const sender = btn.getComponent('signalsender');
+            const sender = btn.getComponent('SignalSenderComponent');
             if (sender) {
                 return sender.currentSignalState > 0;
             }
