@@ -145,31 +145,14 @@ export class PlaymodeTool extends Tool {
                 state.removePlaymodeEntityFromState(parent);
             } else {
                 // Components all have same parent, HAS other siblings
-                // delete old parent, create new parent cube, old siblings become orphans
+                // delete old parent, old siblings become orphans
+                // The new fused cube will just be a normal cube.
                 state.removePlaymodeEntityFromState(parent);
                 otherSiblings.forEach(sibling => {
                     sibling.aberrationState = 'orphaned';
                     sibling.parentBox = null;
                     sibling.updateVisuals();
                 });
-
-                // Spawn new parent cube
-                const draggedTransform = draggedBox.getComponent(TransformComponent);
-                const spawnX = draggedTransform ? draggedTransform.x : 0;
-                const spawnY = draggedTransform ? draggedTransform.y : 0;
-
-                const newParentType = recipe.outputs[0]; // Assuming first output is the new parent type
-                const newParent = new Box({
-                    typeName: newParentType,
-                    parentBox: parent.parentBox,
-                    aberrationState: 'parentActive'
-                });
-                const pTransform = newParent.getComponent(TransformComponent);
-                if (pTransform) {
-                    pTransform.x = spawnX;
-                    pTransform.y = spawnY;
-                }
-                state.addPlaymodeEntityToState(newParent);
             }
         }
 
@@ -183,33 +166,27 @@ export class PlaymodeTool extends Tool {
         const spawnX = transform ? transform.x : 0;
         const spawnY = transform ? transform.y : 0;
 
-        // Skip spawning standard outputs if we just spawned a new parent cube
-        // because the new parent cube ALREADY represents the recipe outputs.
-        const didSpawnNewParent = parentBoxes.length === 1 && parentBoxes[0].childBoxes.filter(s => !allInvolvedBoxes.includes(s)).length > 0;
-
-        if (!didSpawnNewParent) {
-            let offsetX = 0;
-            recipe.outputs.forEach(outputType => {
-                const newBox = new Box({
-                    typeName: outputType,
-                    parentBox: parentDataToInherit,
-                    aberrationState: 'normal'
-                });
-                const newTransform = newBox.getComponent(TransformComponent);
-                if (newTransform) {
-                    newTransform.x = spawnX + offsetX;
-                    newTransform.y = spawnY;
-                }
-                state.addPlaymodeEntityToState(newBox);
-
-                // If the new box inherited a parent, we need to register it as a child
-                if (parentDataToInherit) {
-                    parentDataToInherit.childBoxes.push(newBox);
-                }
-
-                offsetX += 50;
+        let offsetX = 0;
+        recipe.outputs.forEach(outputType => {
+            const newBox = new Box({
+                typeName: outputType,
+                parentBox: parentDataToInherit,
+                aberrationState: 'normal'
             });
-        }
+            const newTransform = newBox.getComponent(TransformComponent);
+            if (newTransform) {
+                newTransform.x = spawnX + offsetX;
+                newTransform.y = spawnY;
+            }
+            state.addPlaymodeEntityToState(newBox);
+
+            // If the new box inherited a parent, we need to register it as a child
+            if (parentDataToInherit) {
+                parentDataToInherit.childBoxes.push(newBox);
+            }
+
+            offsetX += 50;
+        });
 
         // Clear references since the dragged entity is destroyed
         state.playmodeDraggingEntity = null;
