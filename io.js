@@ -38,7 +38,7 @@ export function serializeLevel(state) {
             const componentData = {};
 
             for (const key of Object.keys(component)) {
-                if (key === 'entity') continue;
+                if (key === 'entity' || key === 'image' || key === 'tintedCanvas' || key === 'lastTint' || key === 'lastSourceStr') continue;
 
                 if (componentName === 'SignalSenderComponent' && key === 'receiverComponents') {
                     componentData[key] = component[key].map(c => c.entity.id);
@@ -112,7 +112,7 @@ export function serializeLevelBinary(state) {
 
             let hasChanges = false;
             for (const key of Object.keys(component)) {
-                if (key === 'entity') continue;
+                if (key === 'entity' || key === 'image' || key === 'tintedCanvas' || key === 'lastTint' || key === 'lastSourceStr') continue;
 
                 let val;
                 if (componentName === 'SignalSenderComponent' && key === 'receiverComponents') {
@@ -495,8 +495,11 @@ export function importLevelBinary(state, buffer) {
                             }
                             component[key] = cloneValue(componentData[key]);
                         }
-                        if (componentName === 'SpriteRendererComponent') {
+                        if (componentName === 'SpriteRendererComponent' || componentName === 'SpritesheetRendererComponent') {
                             component.image = null;
+                            component.tintedCanvas = null;
+                            component.lastTint = null;
+                            component.lastSourceStr = null;
                         }
                     }
                 }
@@ -612,8 +615,11 @@ export function importLevel(state, jsonString) {
                         }
                         component[key] = cloneValue(componentData[key]);
                     }
-                    if (componentName === 'SpriteRendererComponent') {
+                    if (componentName === 'SpriteRendererComponent' || componentName === 'SpritesheetRendererComponent') {
                         component.image = null; // force reload image
+                        component.tintedCanvas = null;
+                        component.lastTint = null;
+                        component.lastSourceStr = null;
                     }
                 }
             }
