@@ -1,0 +1,2 @@
+#!/bin/bash
+npx http-server . -p 5500 -a 127.0.0.1
