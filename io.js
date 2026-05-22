@@ -178,14 +178,24 @@ export function serializeLevelBinary(state) {
         entities: data.entities
     };
 
-    // Pass 1: gather all strings
-    const gatherStrings = (obj) => {
-        if (typeof obj === 'string') getStringId(obj);
-        else if (Array.isArray(obj)) obj.forEach(gatherStrings);
-        else if (obj && typeof obj === 'object') {
-            for (const k in obj) {
-                getStringId(k);
-                gatherStrings(obj[k]);
+    // Pass 1: gather all strings (non-recursive to avoid stack overflow)
+    const gatherStrings = (rootObj) => {
+        const stack = [rootObj];
+        while (stack.length > 0) {
+            const obj = stack.pop();
+            if (typeof obj === 'string') {
+                getStringId(obj);
+            } else if (Array.isArray(obj)) {
+                for (let i = obj.length - 1; i >= 0; i--) {
+                    stack.push(obj[i]);
+                }
+            } else if (obj && typeof obj === 'object' && obj.constructor === Object) {
+                const keys = Object.keys(obj);
+                for (let i = keys.length - 1; i >= 0; i--) {
+                    const k = keys[i];
+                    getStringId(k);
+                    stack.push(obj[k]);
+                }
             }
         }
     };
@@ -245,7 +255,7 @@ export function serializeLevelBinary(state) {
             writeUint8(TYPE_ARRAY);
             writeUint16(val.length);
             val.forEach(writeValue);
-        } else if (typeof val === 'object') {
+        } else if (typeof val === 'object' && val.constructor === Object) {
             writeUint8(TYPE_OBJECT);
             const keys = Object.keys(val);
             writeUint16(keys.length);
@@ -253,6 +263,9 @@ export function serializeLevelBinary(state) {
                 writeStringRef(k);
                 writeValue(val[k]);
             });
+        } else {
+            // Unhandled object types (like Image, Context, etc.) are treated as null
+            writeUint8(TYPE_NULL);
         }
     }
 
@@ -295,6 +308,14 @@ export async function exportLevel(state) {
                     }
                 } catch (err) {
                     console.error("Compression for URL failed:", err);
+                    const notification = document.getElementById('notification');
+                    if (notification) {
+                        notification.textContent = 'Failed to generate link for webhook!';
+                        notification.style.backgroundColor = '#f44336'; // Red for error
+                        notification.className = '';
+                        setTimeout(() => notification.className = 'hidden', 3000);
+                    }
+                    return jsonString; // Abort export to webhook
                 }
 
                 const blob = new Blob([jsonString], { type: 'application/json' });
