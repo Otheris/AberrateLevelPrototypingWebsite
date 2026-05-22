@@ -9,6 +9,7 @@ import { history } from './history.js';
 import { updateSettingsPanel } from './updateSettingsPanel.js';
 import { setupCubeTypesModal } from './cubeTypesModal.js';
 import { setupRecipesModal } from './recipesModal.js';
+import { setupWebhooksModal } from './webhooksModal.js';
 
 /**
  * Generate entity buttons dynamically from entityTypes
@@ -21,14 +22,21 @@ function generateEntityButtons() {
   palette.innerHTML = '';
 
   // Create a button for each entity type
+  let index = 1;
   Object.entries(entityTypes).forEach(([typeKey, EntityClass]) => {
     const button = document.createElement('button');
     button.className = 'entity-btn';
     const staticName = EntityClass?.getName?.();
     const staticDisplayName = EntityClass?.getDisplayName?.();
     button.dataset.entity = staticName || typeKey;
-    button.textContent = staticDisplayName ?? staticName ??`${typeKey} [null]`;
+
+    let text = staticDisplayName ?? staticName ??`${typeKey} [null]`;
+    if (config.enableToolHotkeys && index <= 9) {
+        text += ` [${index}]`;
+    }
+    button.textContent = text;
     palette.appendChild(button);
+    index++;
   });
 }
 
@@ -62,7 +70,15 @@ function updateToolButtonsUI() {
       // add hotkey hint to button text if enabled in config
       const hotkey = config.hotkeys.tools[toolName];
       if (hotkey) {
-        button.innerHTML = `${button.dataset.text} [${hotkey.toUpperCase()}]`;
+        let label = `${button.dataset.text} [${hotkey.toUpperCase()}]`;
+        if (toolName === 'room') {
+            label += ' [Shift to Erase]';
+        }
+        button.innerHTML = label;
+      } else if (toolName === 'room') {
+        button.innerHTML = `${button.dataset.text} [Shift to Erase]`;
+      } else {
+        button.innerHTML = button.dataset.text;
       }
     }
     else {
@@ -312,6 +328,8 @@ export function setupInputHandlers(canvas, state) {
     config.enableToolHotkeys = !config.enableToolHotkeys;
     hotkeyBtn.innerHTML = config.enableToolHotkeys ? hotkeyBtn.dataset.activetext : hotkeyBtn.dataset.inactivetext;
     updateToolButtonsUI();
+    generateEntityButtons();
+    updateEntityButtonsUI(state);
   });
 
   // Set up hitbox button toggle
@@ -350,9 +368,11 @@ export function setupInputHandlers(canvas, state) {
 
   // Import/Export buttons
   const exportBtn = document.getElementById('exportBtn');
+  const webhookSelect = document.getElementById('webhookSelect');
   if (exportBtn) {
     exportBtn.addEventListener('click', async () => {
-      await exportLevel(state);
+      const webhookUrl = webhookSelect ? webhookSelect.value : '';
+      await exportLevel(state, webhookUrl);
     });
   }
 
@@ -380,6 +400,7 @@ export function setupInputHandlers(canvas, state) {
 
   setupCubeTypesModal();
   setupRecipesModal();
+  setupWebhooksModal();
 
   const importBtn = document.getElementById('importBtn');
   if (importBtn) {

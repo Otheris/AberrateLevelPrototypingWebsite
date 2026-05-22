@@ -274,7 +274,7 @@ export function serializeLevelBinary(state) {
     return new Uint8Array(buffer, 0, offset);
 }
 
-export async function exportLevel(state) {
+export async function exportLevel(state, webhookUrl = '') {
     const jsonString = serializeLevel(state);
     const levelNameInput = document.getElementById('levelName');
     const levelName = levelNameInput ? levelNameInput.value : 'Untitled';
@@ -284,14 +284,11 @@ export async function exportLevel(state) {
 
     // Discord webhook integration
     try {
-        const response = await fetch('webhook.txt');
-        if (response.ok) {
-            const webhookUrl = (await response.text()).trim();
-            if (webhookUrl && webhookUrl.startsWith('http')) {
-                let contentMessage = "";
+        if (webhookUrl && webhookUrl.startsWith('http')) {
+            let contentMessage = "";
 
-                try {
-                    if (window.pako && window.base64js) {
+            try {
+                if (window.pako && window.base64js) {
                         const dataToCompress = serializeLevelBinary(state);
                         const compressed = window.pako.deflate(dataToCompress);
                         const b64 = window.base64js.fromByteArray(compressed);
@@ -359,9 +356,8 @@ export async function exportLevel(state) {
                     console.error('Failed to send level to Discord webhook:', webhookResponse.statusText);
                 }
             }
-        }
     } catch (e) {
-        console.error('Failed to read webhook.txt or send to Discord:', e);
+        console.error('Failed to send to Discord:', e);
     }
 
     return jsonString;
