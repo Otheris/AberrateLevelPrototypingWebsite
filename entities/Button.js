@@ -32,13 +32,6 @@ export class Button extends Entity {
         const textComp = new TextRendererComponent({ text: this.name, offsetY: -40 });
         this.addComponent(textComp);
 
-        this.addComponent({
-            entity: null,
-            clone: function() {
-                return { entity: null, onPlayModeUpdate: this.onPlayModeUpdate };
-            },
-            onPlayModeUpdate: function(dt) { this.entity.checkPowered(dt); }
-        });
 
         // Timeout to wait for Transform to be added by super class if not yet
         setTimeout(() => this.updateVisuals(), 0);
@@ -70,7 +63,7 @@ export class Button extends Entity {
         }
     }
 
-    checkPowered(dt) {
+    checkPowered() {
         const myCollider = this.getComponent(BoxColliderComponent);
         const myTransform = this.getComponent(TransformComponent);
         const sender = this.getComponent(SignalSenderComponent);
@@ -82,9 +75,12 @@ export class Button extends Entity {
         const playmodeEntities = editorState.playmodeEntities || editorState.entities || [];
         playmodeEntities.forEach(entity => {
             if (entity instanceof Box) {
+                if (entity === editorState.playmodeDraggingEntity) {
+                    return; // Ignore the entity currently being dragged
+                }
                 const boxCollider = entity.getComponent(BoxColliderComponent);
                 const boxTransform = entity.getComponent(TransformComponent);
-                if (boxCollider && boxTransform) {
+                if (boxCollider && boxTransform && entity.aberrationState !== 'childrenActive' && entity.aberrationState !== 'inactiveChild') {
                     // Manual AABB intersection just to be perfectly safe
                     const minX1 = myTransform.x - myCollider.width/2;
                     const maxX1 = myTransform.x + myCollider.width/2;
