@@ -406,3 +406,58 @@ body {
 .modal-actions button:hover, #addCubeTypeBtn:hover, #addWebhookBtn:hover {
   background: #555;
 }
+
+/* Tabs */
+.tabs-container {
+  display: flex;
+  background-color: #262626;
+  border-bottom: 1px solid #444;
+  padding: 0 10px;
+}
+
+.tabs-list {
+  display: flex;
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 8px 16px;
+  background-color: #333;
+  color: #aaa;
+  border: 1px solid #444;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  margin-right: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.tab.active {
+  background-color: #444;
+  color: white;
+}
+
+.tab:hover:not(.active) {
+  background-color: #3a3a3a;
+}
+
+.tab-close {
+  margin-left: 8px;
+  color: #ff5555;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.add-tab-btn {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+.add-tab-btn:hover {
+  color: white;
+}

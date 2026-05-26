@@ -74,6 +74,20 @@ export class Box extends Entity {
                 renderer.colorTint = '#ffffff';
             }
 
+            // Check for recipes to draw indicator sections
+            renderer.indicators = [];
+            if (state.recipes && (!this.childBoxes || this.childBoxes.length === 0)) {
+                const defuseRecipe = state.recipes.find(r => r.inputs.length === 1 && r.inputs[0] === this.typeName && r.outputs.length > 0);
+                if (defuseRecipe) {
+                    defuseRecipe.outputs.forEach(outputType => {
+                        const outTypeDef = state.cubeTypes.find(t => t.name === outputType);
+                        if (outTypeDef) {
+                            renderer.indicators.push(outTypeDef.color);
+                        }
+                    });
+                }
+            }
+
             if (this.aberrationState === 'normal') {
                 renderer.isOutline = false;
                 renderer.isDotted = false;

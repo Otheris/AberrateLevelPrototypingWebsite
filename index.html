@@ -8,8 +8,8 @@
 <body>
 <div id="app">
   <!-- Top Bar -->
-  <div id="topBar" class="bar">
-    <div class="bar-content">
+  <div id="topBar" class="bar" style="flex-direction: column; align-items: stretch; padding: 0;">
+    <div class="bar-content" style="padding: 10px;">
       <button id="helpBtn" class="help-btn" title="Help / Tutorial">?</button>
       <h1>Level Editor</h1>
       <div class="level-info">
@@ -31,7 +31,14 @@
           <button id="manageWebhooksBtn" title="Manage Webhooks">+</button>
         </div>
         <button id="solverExportBtn" style="background-color:#4CAF50; color:white;">Solver Export</button>
+        <button id="clearBtn" style="background-color:#ff5555; color:white; font-weight:bold;">Clear</button>
       </div>
+    </div>
+    <div id="tabsContainer" class="tabs-container">
+      <div id="tabsList" class="tabs-list">
+        <!-- Tabs will be dynamically inserted here -->
+      </div>
+      <button id="addTabBtn" class="add-tab-btn">+</button>
     </div>
   </div>
 
@@ -72,6 +79,18 @@
     </div>
   </div>
 
+  <!-- Clear Confirm Modal -->
+  <div id="clearModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Clear Level?</h2>
+      <p>Are you sure you want to delete all entities and rooms in this level? This action cannot be undone here easily unless you undo.</p>
+      <div class="modal-actions">
+        <button id="cancelClearBtn">Cancel</button>
+        <button id="confirmClearBtn" style="background-color: #ff5555; color: white;">Clear Everything</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Tutorial Modal -->
   <div id="tutorialModal" class="modal hidden">
     <div class="modal-content" style="width: 600px; max-width: 95vw; max-height: 90vh; overflow-y: auto;">
@@ -98,7 +117,7 @@
   <div id="notification" class="hidden" style="position: absolute; top: 10px; right: 10px; background-color: #4CAF50; color: white; padding: 10px; border-radius: 5px; z-index: 1000; transition: opacity 0.5s;"></div>
 
   <!-- Canvas Area -->
-  <div id="editor-layout" style="display: flex; height: calc(100vh - 120px);">
+  <div id="editor-layout" style="display: flex; height: calc(100vh - 120px); position: relative;">
     <div id="canvasContainer" style="flex: 1; position: relative;">
       <canvas id="editor" class="js-noMenu"></canvas>
       <button id="playModeBtn" class="play-mode-btn" type="button" aria-label="Enter play mode">
@@ -108,7 +127,7 @@
       <div id="entityPalette" class="entity-palette hidden">
       </div>
     </div>
-    <div id="entitySettingsPanel" style="width: 250px; background: #262626; color: #e0e0e0; border-left: 1px solid #555; padding: 10px; display: none; flex-direction: column;">
+    <div id="entitySettingsPanel" style="width: 250px; position: absolute; right: 0; top: 0; height: 100%; z-index: 10; background: rgba(38, 38, 38, 0.9); color: #e0e0e0; border-left: 1px solid #555; padding: 10px; display: none; flex-direction: column; overflow-y: auto;">
       <h3>Entity Settings</h3>
       <div id="entitySettingsContent"></div>
     </div>

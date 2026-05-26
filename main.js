@@ -3,6 +3,7 @@ import { draw } from './renderer.js';
 import { setupInputHandlers } from './input.js';
 import { history } from './history.js';
 import { importLevel, importLevelBinary } from './io.js';
+import { setupTabs } from './tabs.js';
 
 let canvas = document.getElementById('editor');
 let ctx = canvas.getContext('2d');
@@ -95,6 +96,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error("Failed to decompress and load level from URL:", e);
         }
+    } else {
+        // Setup tabs only if we aren't loading from URL. Or maybe setup tabs anyway but then the active tab gets the URL content.
+        // Wait, setupTabs() calls loadCurrentLevelFromStorage(), which will overwrite the URL loaded level.
+        // Let's do setupTabs first, then URL level loads ON TOP of active tab.
+    }
+
+    setupTabs();
+    if (compressedLevel) {
+        import('./tabs.js').then(m => m.saveCurrentLevelToStorage());
     }
 
     history.init(state);
@@ -123,3 +133,35 @@ function loop() {
 }
 
 loop();
+    const clearBtn = document.getElementById('clearBtn');
+    const clearModal = document.getElementById('clearModal');
+    const cancelClearBtn = document.getElementById('cancelClearBtn');
+    const confirmClearBtn = document.getElementById('confirmClearBtn');
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            clearModal.classList.remove('hidden');
+        });
+    }
+
+    if (cancelClearBtn) {
+        cancelClearBtn.addEventListener('click', () => {
+            clearModal.classList.add('hidden');
+        });
+    }
+
+    if (confirmClearBtn) {
+        confirmClearBtn.addEventListener('click', () => {
+            state.entities = [];
+            state.rooms = [];
+            state.tiles = [];
+            state.nodeData = [];
+            state.selectedEntites = [];
+            state.selectedConnections = [];
+            state.selectedNode = null;
+            state.highlightedEntities = [];
+
+            history.saveSnapshot(state);
+            clearModal.classList.add('hidden');
+        });
+    }
