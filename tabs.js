@@ -73,7 +73,7 @@ export function setupTabs() {
         saveTabsState();
 
         // Load an empty level
-        importLevel(state, '{"tiles":[],"rooms":[],"camera":{"x":0,"y":0,"zoom":1},"cubeTypes":[{"name":"White","weight":2,"color":"#ffffff"},{"name":"Red","weight":1,"color":"#ff0000"},{"name":"Blue","weight":1,"color":"#0000ff"},{"name":"Green","weight":1,"color":"#00ff00"},{"name":"Orange","weight":1,"color":"#ffa500"},{"name":"Cyan","weight":1,"color":"#00ffff"},{"name":"Magenta","weight":1,"color":"#ff00ff"}],"recipes":[{"id":"r1","inputs":["White"],"outputs":["Red","Green","Blue"]},{"id":"r2","inputs":["Red","Blue"],"outputs":["Orange"]},{"id":"r3","inputs":["Green","Blue"],"outputs":["Cyan"]},{"id":"r4","inputs":["Red","Green"],"outputs":["Magenta"]}],"entities":[]}');
+        importLevel(state, '{"tiles":[],"rooms":[],"camera":{"x":0,"y":0,"zoom":1},"cubeTypes":[{"name":"White","weight":3,"color":"#ffffff"},{"name":"Red","weight":1,"color":"#ff0000"},{"name":"Green","weight":1,"color":"#00ff00"},{"name":"Blue","weight":1,"color":"#0000ff"},{"name":"Cyan","weight":2,"color":"#00ffff"},{"name":"Magenta","weight":2,"color":"#ff00ff"},{"name":"Orange","weight":2,"color":"#ffa500"}],"recipes":[{"id":"r1","inputs":["White"],"outputs":["Red","Green","Blue"]},{"id":"r2","inputs":["Red","Green","Blue"],"outputs":["White"]},{"id":"r3","inputs":["Red","Blue"],"outputs":["Orange"]},{"id":"r4","inputs":["Orange"],"outputs":["Red","Blue"]},{"id":"r5","inputs":["Green","Blue"],"outputs":["Cyan"]},{"id":"r6","inputs":["Cyan"],"outputs":["Green","Blue"]},{"id":"r7","inputs":["Red","Green"],"outputs":["Magenta"]},{"id":"r8","inputs":["Magenta"],"outputs":["Red","Green"]}],"entities":[]}');
         levelNameInput.value = 'Untitled';
         saveCurrentLevelToStorage(); // Save the empty initial state
         renderTabs();
@@ -110,6 +110,11 @@ export function setupTabs() {
 
     renderTabs();
     loadCurrentLevelFromStorage();
+
+    // Auto-save when the user is about to leave the page
+    window.addEventListener('beforeunload', () => {
+        saveCurrentLevelToStorage();
+    });
 }
 
 export function saveCurrentLevelToStorage() {

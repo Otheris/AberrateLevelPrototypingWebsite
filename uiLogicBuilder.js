@@ -11,9 +11,15 @@ export function renderLogicBuilder(container, entity, state) {
     }
 
     renderLogicNode(wrapper, entity.logic, (newLogic) => {
+
         entity.logic = newLogic;
         entity.setEditableProperty('logic', newLogic);
+
+        // Sync lines (connections) based on new AST
+        syncConnectionsFromLogic(entity, state);
+
         import('./history.js').then(({ history }) => history.saveSnapshot(state));
+
         renderLogicBuilder(container, entity, state);
     }, state);
 
@@ -125,4 +131,40 @@ function renderLogicNode(container, logic, onChange, state) {
     }
 
     container.appendChild(nodeDiv);
+}
+
+function extractButtonsFromLogic(logic, buttonsList) {
+    if (!logic || logic === "TRUE" || logic === "FALSE" || logic === "BUTTON_ID") return;
+    if (typeof logic === 'string') {
+        buttonsList.push(logic);
+        return;
+    }
+    if (logic.args) {
+        logic.args.forEach(arg => extractButtonsFromLogic(arg, buttonsList));
+    }
+}
+
+function syncConnectionsFromLogic(entity, state) {
+    const receiver = entity.getComponent('SignalReceiverComponent');
+    if (!receiver) return;
+
+    const requiredButtons = [];
+    extractButtonsFromLogic(entity.logic, requiredButtons);
+
+    // For all buttons in state
+    state.entities.forEach(other => {
+        if (other.constructor.getName() === 'button') {
+            const sender = other.getComponent('SignalSenderComponent');
+            if (sender) {
+                const isRequired = requiredButtons.includes(other.name);
+                const isConnected = sender.receiverComponents.includes(receiver);
+
+                if (isRequired && !isConnected) {
+                    sender.addReceiver(receiver);
+                } else if (!isRequired && isConnected) {
+                    sender.receiverComponents = sender.receiverComponents.filter(r => r !== receiver);
+                }
+            }
+        }
+    });
 }

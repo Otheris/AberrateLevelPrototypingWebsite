@@ -179,8 +179,24 @@ export class SelectTool extends Tool {
         state.selectedConnections.forEach(conn => {
             conn.sender.receiverComponents = conn.sender.receiverComponents.filter(r => r !== conn.receiver);
 
-            // Note: we could also try to clean up logic here, but parsing the AST to remove a button is complex.
-            // It's acceptable for the user to delete it from the logic builder UI.
+            // Clean up logic AST by removing the button reference
+            const targetEntity = conn.receiver.entity;
+            if (targetEntity && targetEntity.logic && conn.sender.entity && conn.sender.entity.name) {
+                const btnName = conn.sender.entity.name;
+
+                function removeButtonFromAST(logic, btnToRemove) {
+                    if (typeof logic === 'string') {
+                        return logic === btnToRemove ? "TRUE" : logic;
+                    }
+                    if (logic && logic.args) {
+                        const newArgs = logic.args.map(arg => removeButtonFromAST(arg, btnToRemove));
+                        return { op: logic.op, args: newArgs };
+                    }
+                    return logic;
+                }
+
+                targetEntity.setEditableProperty('logic', removeButtonFromAST(targetEntity.logic, btnName));
+            }
         });
         state.selectedConnections = [];
         deletedSomething = true;
