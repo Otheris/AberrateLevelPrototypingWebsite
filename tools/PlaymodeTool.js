@@ -37,6 +37,9 @@ export class PlaymodeTool extends Tool {
       state.playmodeEntities.forEach(e => {
         if (typeof e.checkPowered === 'function') e.checkPowered();
       });
+      state.playmodeEntities.forEach(e => {
+        if (typeof e.evaluateLogic === 'function') e.evaluateLogic();
+      });
     }
   }
 
@@ -85,6 +88,9 @@ export class PlaymodeTool extends Tool {
       // Update buttons when a cube is dropped
       state.playmodeEntities.forEach(e => {
         if (typeof e.checkPowered === 'function') e.checkPowered();
+      });
+      state.playmodeEntities.forEach(e => {
+        if (typeof e.evaluateLogic === 'function') e.evaluateLogic();
       });
     }
   }
@@ -211,6 +217,9 @@ export class PlaymodeTool extends Tool {
       // Update buttons when aberration state changes
       state.playmodeEntities.forEach(e => {
         if (typeof e.checkPowered === 'function') e.checkPowered();
+      });
+      state.playmodeEntities.forEach(e => {
+        if (typeof e.evaluateLogic === 'function') e.evaluateLogic();
       });
     }
   }
