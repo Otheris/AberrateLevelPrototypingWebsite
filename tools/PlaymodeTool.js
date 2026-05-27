@@ -208,6 +208,10 @@ export class PlaymodeTool extends Tool {
               }
           }
       });
+      // Update buttons when aberration state changes
+      state.playmodeEntities.forEach(e => {
+        if (typeof e.checkPowered === 'function') e.checkPowered();
+      });
     }
   }
 
