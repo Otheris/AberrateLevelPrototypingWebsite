@@ -23,7 +23,7 @@ export class Button extends Entity {
         this.addComponent(new BoxColliderComponent({ width: 60, height: 60 }));
         this.addComponent(new SpriteRendererComponent({
             sprite: 'sprites/cubebutton.png',
-            colorTint: '#ff5555',
+            colorTint: '#ffffff',
             src: { x: 0, y: 0, w: 208, h: 208 },
             dest: { x: 0, y: 0, w: 60, h: 60 }
         }));
@@ -59,16 +59,6 @@ export class Button extends Entity {
         const transform = this.getComponent(TransformComponent);
         if (transform) {
             transform.rotation = 0;
-        }
-
-        const renderer = this.getComponent(SpriteRendererComponent);
-        const sender = this.getComponent(SignalSenderComponent);
-        if (renderer && sender) {
-            if (sender.currentSignalState > 0) {
-                renderer.colorTint = '#aaffaa'; // Greenish when pressed
-            } else {
-                renderer.colorTint = '#ff5555';
-            }
         }
     }
 

@@ -455,8 +455,14 @@ export function importLevelBinary(state, buffer) {
             state.recipes = cloneValue(data.recipes);
         } else {
             state.recipes = [
-                { id: 'r1', inputs: ['Red', 'Blue'], outputs: ['White'] },
-                { id: 'r2', inputs: ['White'], outputs: ['Red', 'Blue'] }
+                { id: 'r1', inputs: ['White'], outputs: ['Red', 'Green', 'Blue'] },
+                { id: 'r2', inputs: ['Red', 'Green', 'Blue'], outputs: ['White'] },
+                { id: 'r3', inputs: ['Red', 'Blue'], outputs: ['Orange'] },
+                { id: 'r4', inputs: ['Orange'], outputs: ['Red', 'Blue'] },
+                { id: 'r5', inputs: ['Green', 'Blue'], outputs: ['Cyan'] },
+                { id: 'r6', inputs: ['Cyan'], outputs: ['Green', 'Blue'] },
+                { id: 'r7', inputs: ['Red', 'Green'], outputs: ['Magenta'] },
+                { id: 'r8', inputs: ['Magenta'], outputs: ['Red', 'Green'] }
             ];
         }
 
@@ -572,8 +578,14 @@ export function importLevel(state, jsonString) {
         } else {
             // Default recipes if not present in save
             state.recipes = [
-                { id: 'r1', inputs: ['Red', 'Blue'], outputs: ['White'] },
-                { id: 'r2', inputs: ['White'], outputs: ['Red', 'Blue'] }
+                { id: 'r1', inputs: ['White'], outputs: ['Red', 'Green', 'Blue'] },
+                { id: 'r2', inputs: ['Red', 'Green', 'Blue'], outputs: ['White'] },
+                { id: 'r3', inputs: ['Red', 'Blue'], outputs: ['Orange'] },
+                { id: 'r4', inputs: ['Orange'], outputs: ['Red', 'Blue'] },
+                { id: 'r5', inputs: ['Green', 'Blue'], outputs: ['Cyan'] },
+                { id: 'r6', inputs: ['Cyan'], outputs: ['Green', 'Blue'] },
+                { id: 'r7', inputs: ['Red', 'Green'], outputs: ['Magenta'] },
+                { id: 'r8', inputs: ['Magenta'], outputs: ['Red', 'Green'] }
             ];
         }
 
