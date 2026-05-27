@@ -47,7 +47,6 @@ export class Button extends Entity {
     setEditableProperty(key, value) {
         super.setEditableProperty(key, value);
         if (key === 'requiredWeight') {
-            this.updateVisuals();
         } else if (key === 'name') {
             const textComp = this.getComponent(TextRendererComponent);
             if (textComp) {
@@ -60,6 +59,16 @@ export class Button extends Entity {
         const transform = this.getComponent(TransformComponent);
         if (transform) {
             transform.rotation = 0;
+        }
+
+        const renderer = this.getComponent(SpriteRendererComponent);
+        const sender = this.getComponent(SignalSenderComponent);
+        if (renderer && sender) {
+            if (sender.currentSignalState > 0) {
+                renderer.colorTint = '#aaffaa'; // Greenish when pressed
+            } else {
+                renderer.colorTint = '#ff5555';
+            }
         }
     }
 
@@ -108,6 +117,10 @@ export class Button extends Entity {
             }
         });
 
+        const wasPowered = sender.currentSignalState > 0;
         sender.setSignalState(isPowered ? 1 : 0);
+
+        if (wasPowered !== isPowered) {
+        }
     }
 }

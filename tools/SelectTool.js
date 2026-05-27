@@ -178,6 +178,9 @@ export class SelectTool extends Tool {
       if (state.selectedConnections && state.selectedConnections.length > 0) {
         state.selectedConnections.forEach(conn => {
             conn.sender.receiverComponents = conn.sender.receiverComponents.filter(r => r !== conn.receiver);
+
+            // Note: we could also try to clean up logic here, but parsing the AST to remove a button is complex.
+            // It's acceptable for the user to delete it from the logic builder UI.
         });
         state.selectedConnections = [];
         deletedSomething = true;
@@ -237,8 +240,20 @@ export class SelectTool extends Tool {
       state.drawingConnectionFromComponents.forEach(signalSenderComponent => {
         signalSenderComponent.addReceiver(signalReceiverComponent);
         console.log('SelectTool: Finished drawing connection from', signalSenderComponent, 'to', signalReceiverComponent);
+
+        // Also update logic if the target has logic AST and the sender is a Button with a name
+        if (targetEntity.logic !== undefined && signalSenderComponent.entity && signalSenderComponent.entity.name) {
+            const btnName = signalSenderComponent.entity.name;
+            const currentLogic = targetEntity.logic;
+            if (!currentLogic || currentLogic === "TRUE" || currentLogic === "FALSE") {
+                targetEntity.setEditableProperty('logic', btnName);
+            } else {
+                targetEntity.setEditableProperty('logic', { op: "AND", args: [currentLogic, btnName] });
+            }
+        }
       });
       history.saveSnapshot(state);
+      import('../updateSettingsPanel.js').then(m => m.updateSettingsPanel(state));
     }
     else {
       console.log('SelectTool: Target entity does not have SignalReceiverComponent, cannot finish drawing connection:', targetEntity);

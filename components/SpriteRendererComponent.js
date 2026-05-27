@@ -70,9 +70,13 @@ export class SpriteRendererComponent extends Component {
                         offscreenCtx.drawImage(this.image, source.x, source.y, source.w, source.h, 0, 0, source.w, source.h);
 
                         // Apply the tint using composite operation
-                        offscreenCtx.globalCompositeOperation = 'source-in';
+                        offscreenCtx.globalCompositeOperation = 'multiply';
                         offscreenCtx.fillStyle = this.colorTint;
                         offscreenCtx.fillRect(0, 0, source.w, source.h);
+
+                        // Restore alpha channel using destination-in so transparent parts remain transparent
+                        offscreenCtx.globalCompositeOperation = 'destination-in';
+                        offscreenCtx.drawImage(this.image, source.x, source.y, source.w, source.h, 0, 0, source.w, source.h);
 
                         this.lastTint = this.colorTint;
                         this.lastSourceStr = sourceStr;
@@ -131,6 +135,28 @@ export class SpriteRendererComponent extends Component {
                 }
             }
         }
+
+            // Draw indicators if any
+            if (this.indicators && this.indicators.length > 0) {
+                // To draw indicators around the center, we need to translate to the entity's center
+                ctx.save();
+                ctx.translate(transform.x, transform.y);
+                const numIndicators = this.indicators.length;
+                const radius = Math.min(w, h) / 2 + 6;
+                ctx.lineWidth = 4;
+
+                for (let i = 0; i < numIndicators; i++) {
+                    const angle1 = (i / numIndicators) * Math.PI * 2 - Math.PI / 2;
+                    const angle2 = ((i + 1) / numIndicators) * Math.PI * 2 - Math.PI / 2;
+                    const gap = 0.2; // Small gap between indicators
+
+                    ctx.beginPath();
+                    ctx.arc(0, 0, radius, angle1 + gap / 2, angle2 - gap / 2);
+                    ctx.strokeStyle = this.indicators[i];
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
 
         ctx.restore(); // Restore canvas state
     }
