@@ -59,6 +59,7 @@ import { Button } from './entities/Button.js';
 import { Stairs } from './entities/Stairs.js';
 import { Player } from './entities/Player.js';
 import { Door } from './entities/Door.js';
+import { PhaseGate } from './entities/PhaseGate.js';
 
 // Entity types
 export const entityTypes = {
@@ -67,6 +68,7 @@ export const entityTypes = {
     stairs: Stairs,
     player: Player,
     door: Door,
+    phase_gate: PhaseGate,
     enemy: null, // Placeholder for future Enemy entity
 };
 
