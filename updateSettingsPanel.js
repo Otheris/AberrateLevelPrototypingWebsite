@@ -128,6 +128,67 @@ export function updateSettingsPanel(state) {
             window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
           });
           label.appendChild(select);
+        } else if (prop.type === 'list') {
+          label.innerText = prop.label + ': ';
+          const listContainer = document.createElement('div');
+          listContainer.style.marginLeft = '10px';
+          listContainer.style.marginBottom = '5px';
+
+          const renderList = () => {
+              listContainer.innerHTML = '';
+              const currentList = entity[prop.property] || [];
+
+              currentList.forEach((item, index) => {
+                  const itemDiv = document.createElement('div');
+                  itemDiv.style.display = 'flex';
+                  itemDiv.style.marginBottom = '2px';
+
+                  const select = document.createElement('select');
+                  prop.options.forEach(opt => {
+                      const optionEl = document.createElement('option');
+                      optionEl.value = opt;
+                      optionEl.innerText = opt;
+                      if (item === opt) optionEl.selected = true;
+                      select.appendChild(optionEl);
+                  });
+                  select.addEventListener('change', (e) => {
+                      const newList = [...entity[prop.property]];
+                      newList[index] = e.target.value;
+                      entity.setEditableProperty(prop.property, newList);
+                      import('./history.js').then(({ history }) => history.saveSnapshot(state));
+                      window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
+                  });
+
+                  const removeBtn = document.createElement('button');
+                  removeBtn.innerText = '-';
+                  removeBtn.style.marginLeft = '5px';
+                  removeBtn.addEventListener('click', () => {
+                      const newList = entity[prop.property].filter((_, i) => i !== index);
+                      entity.setEditableProperty(prop.property, newList);
+                      import('./history.js').then(({ history }) => history.saveSnapshot(state));
+                      window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
+                      renderList(); // Re-render to show removed item
+                  });
+
+                  itemDiv.appendChild(select);
+                  itemDiv.appendChild(removeBtn);
+                  listContainer.appendChild(itemDiv);
+              });
+
+              const addBtn = document.createElement('button');
+              addBtn.innerText = '+';
+              addBtn.style.marginTop = '2px';
+              addBtn.addEventListener('click', () => {
+                  const newList = [...(entity[prop.property] || []), prop.options[0]];
+                  entity.setEditableProperty(prop.property, newList);
+                  import('./history.js').then(({ history }) => history.saveSnapshot(state));
+                  window.dispatchEvent(new CustomEvent('entityPropertyChanged', { detail: { entity, property: prop.property } }));
+                  renderList(); // Re-render to show new item
+              });
+              listContainer.appendChild(addBtn);
+          };
+          renderList();
+          label.appendChild(listContainer);
         } else if (prop.type === 'logic') {
           import('./uiLogicBuilder.js').then(({ renderLogicBuilder }) => {
               // check to avoid duplicate rendering race conditions

@@ -9,6 +9,7 @@ export function exportToSolver(state) {
     let solverButtons = [];
     let solverDoors = [];
     let solverStairs = [];
+    let solverGates = [];
     let solverInitialState = {
         player_node: null,
         cubes: [],
@@ -63,6 +64,51 @@ export function exportToSolver(state) {
                 position: nodeId
             });
             solverInitialState.active_cubes.push(boxId);
+        } else if (type === 'phase_gate') {
+            const gateId = entity.name || `g${entity.id}`;
+            let logic = entity.logic;
+            if (logic === "BUTTON_ID") logic = "TRUE";
+            if (!logic) logic = "TRUE";
+
+            const unpoweredWhitelist = (entity.unpoweredWhitelist || []).map(t => t.charAt(0).toUpperCase() + t.slice(1));
+            const poweredWhitelist = (entity.poweredWhitelist || []).map(t => t.charAt(0).toUpperCase() + t.slice(1));
+
+            solverGates.push({
+                id: gateId,
+                logic: logic,
+                unpowered_whitelist: unpoweredWhitelist,
+                powered_whitelist: poweredWhitelist
+            });
+
+            // Determine nodes on either side
+            let dx = 0, dy = 0;
+            if (entity.direction === 0) { // Horizontal gate, sample Top/Bottom
+                dy = 20;
+            } else { // Vertical gate, sample Left/Right
+                dx = 20;
+            }
+
+            const node1 = getPointNode(nodesData, transform.x + dx, transform.y + dy);
+            const node2 = getPointNode(nodesData, transform.x - dx, transform.y - dy);
+
+            if (node1 && node2 && node1.id !== node2.id) {
+                solverEdges.push({
+                    id: `e_${gateId}`,
+                    from: node1.id,
+                    to: node2.id,
+                    type: "phase_gate",
+                    gate_id: gateId
+                });
+                // Since phase gates divide regions they are bidirectional, add both ways
+                solverEdges.push({
+                    id: `e_${gateId}_rev`,
+                    from: node2.id,
+                    to: node1.id,
+                    type: "phase_gate",
+                    gate_id: gateId
+                });
+            }
+
         } else if (type === 'stairs') {
             const stairId = `s${entity.id}`;
             // 0: Right (+x), 1: Down (+y), 2: Left (-x), 3: Up (-y)
@@ -164,6 +210,7 @@ export function exportToSolver(state) {
         buttons: solverButtons,
         doors: solverDoors,
         stairs: solverStairs,
+        gates: solverGates,
         recipes: state.recipes || [],
         cube_types: solverCubeTypes,
         exit_door_id: exitDoorId,
